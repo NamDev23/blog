@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -23,6 +23,7 @@ import Section from '@/components/ui/Section';
 import { Textarea } from '@/components/ui/Textarea';
 import { Post } from '@/types';
 import { slugify } from '@/lib/utils';
+import { createCodeCopyHandler, enhanceCodeBlocks } from '@/lib/codeBlocks';
 
 const DEFAULT_AUTHOR_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -90,6 +91,7 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
   const [isLoading, setIsLoading] = useState(mode === 'edit');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<StatusState>({ type: 'idle', message: '' });
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
   const resolvedSlug = useMemo(() => slugify(form.slug || form.title), [form.slug, form.title]);
   const tagList = useMemo(
@@ -157,6 +159,17 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
       active = false;
     };
   }, [mode, slug]);
+
+  useEffect(() => {
+    if (!previewRef.current) return;
+
+    const container = previewRef.current;
+    const handleCopy = createCodeCopyHandler();
+    container.addEventListener('click', handleCopy);
+    return () => {
+      container.removeEventListener('click', handleCopy);
+    };
+  }, [previewHtml]);
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -469,6 +482,7 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                       <h2 className="text-3xl font-bold text-[var(--text)]">{form.title || 'Untitled post'}</h2>
                       <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{form.excerpt || 'Excerpt preview appears here.'}</p>
                       <div
+                        ref={previewRef}
                         className="prose prose-invert mt-6 max-w-none text-sm text-[var(--text-muted)]"
                         dangerouslySetInnerHTML={{ __html: previewHtml }}
                       />
@@ -622,7 +636,7 @@ function isPostPayload(value: Post | { error?: string } | null): value is Post {
 }
 
 function sanitizePreviewHtml(value: string) {
-  return value
+  return enhanceCodeBlocks(value)
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
     .replace(/\son\w+=(["']).*?\1/gi, '')

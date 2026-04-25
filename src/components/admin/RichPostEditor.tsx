@@ -20,6 +20,7 @@ import {
   Pilcrow,
   Quote,
   Redo2,
+  SquareTerminal,
   Strikethrough,
   Type,
   Underline as UnderlineIcon,
@@ -86,6 +87,11 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
       StarterKit.configure({
         heading: {
           levels: [2, 3, 4],
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            class: 'code-terminal-source',
+          },
         },
       }),
       TextStyle,
@@ -298,6 +304,9 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
           </ToolbarButton>
           <ToolbarButton title="Inline code" isActive={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()}>
             <Code2 size={16} />
+          </ToolbarButton>
+          <ToolbarButton title="Code block" isActive={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
+            <SquareTerminal size={16} />
           </ToolbarButton>
 
           <ToolbarDivider />

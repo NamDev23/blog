@@ -13,6 +13,7 @@ import { usePost } from '@/hooks/usePost';
 import { useRelatedPosts } from '@/hooks/useRelatedPosts';
 import CommentsSection from '@/components/CommentsSection';
 import { siteConfig } from '@/lib/site';
+import { createCodeCopyHandler, enhanceCodeBlocks } from '@/lib/codeBlocks';
 
 interface PostDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -42,7 +43,7 @@ function prepareArticleContent(content: string) {
   const idCounts = new Map<string, number>();
   const safeContent = sanitizeArticleHtml(content);
 
-  const html = safeContent.replace(
+  const html = enhanceCodeBlocks(safeContent).replace(
     /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi,
     (match, level: string, attributes: string, innerHtml: string) => {
       const text = innerHtml.replace(/<[^>]*>/g, '').trim();
@@ -141,6 +142,17 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
 
     headings.forEach((h) => observer.observe(h));
     return () => observer.disconnect();
+  }, [articleContent.html]);
+
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    const container = contentRef.current;
+    const handleCopy = createCodeCopyHandler();
+    container.addEventListener('click', handleCopy);
+    return () => {
+      container.removeEventListener('click', handleCopy);
+    };
   }, [articleContent.html]);
 
 
