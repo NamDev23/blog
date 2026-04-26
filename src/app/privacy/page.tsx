@@ -28,8 +28,8 @@ export default function PrivacyPage() {
             paragraphs: ['Chúng tôi có thể thu thập thông tin theo các cách sau:'],
             list: [
               'Thông tin bạn tự nguyện gửi qua form liên hệ hoặc bình luận',
-              'Dữ liệu phân tích vận hành nếu biến môi trường analytics được cấu hình',
-              'Email gửi cho newsletter hoặc moderation bình luận',
+              'Dữ liệu phân tích vận hành nếu biến môi trường phân tích được cấu hình',
+              'Email gửi cho bản tin hoặc kiểm duyệt bình luận',
             ],
           },
           {
@@ -38,12 +38,12 @@ export default function PrivacyPage() {
             list: [
               'Phản hồi yêu cầu liên hệ và duyệt bình luận',
               'Cải thiện chất lượng nội dung và độ ổn định website',
-              'Bảo vệ form public, API và workflow xuất bản khỏi abuse',
+              'Bảo vệ form công khai, API và quy trình xuất bản khỏi lạm dụng',
             ],
           },
           {
-            title: 'Cookie và tracking',
-            paragraphs: ['Script analytics chỉ được tải khi các biến môi trường public tương ứng được cấu hình. Bạn có thể kiểm soát cookie và bộ nhớ trình duyệt trong phần cài đặt browser.'],
+            title: 'Cookie và theo dõi',
+            paragraphs: ['Script phân tích chỉ được tải khi các biến môi trường công khai tương ứng được cấu hình. Bạn có thể kiểm soát cookie và bộ nhớ trình duyệt trong phần cài đặt trình duyệt.'],
           },
           {
             title: 'Liên kết bên thứ ba',
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
           },
           {
             title: 'Bảo mật dữ liệu',
-            paragraphs: ['Website dùng security headers, validation form, admin-key protection cho write endpoint và giảm field bình luận public. Không website nào bảo đảm an toàn tuyệt đối, nhưng implementation được thiết kế để giảm rủi ro phổ biến.'],
+            paragraphs: ['Website dùng header bảo mật, kiểm tra form, bảo vệ endpoint ghi bằng khóa quản trị và giảm dữ liệu trả ra ở bình luận công khai. Không website nào bảo đảm an toàn tuyệt đối, nhưng phần triển khai được thiết kế để giảm các rủi ro phổ biến.'],
           },
           {
             title: 'Quyền của bạn',

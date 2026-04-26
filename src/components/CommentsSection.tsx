@@ -41,17 +41,17 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
   });
 
   return (
-    <div className="mt-12 sm:mt-16 pt-12 sm:pt-16 border-t border-[var(--line)]">
+    <div className="mt-8 border-t border-[var(--line)] pt-8 sm:mt-12 sm:pt-12">
       {/* Header hiển thị số comment đã được duyệt, không tính comment đang pending. */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-8 sm:mb-10"
+        className="mb-6 sm:mb-10"
       >
         <div className="flex items-center gap-3 mb-2">
-          <MessageCircle className="text-[var(--accent)]" size={28} />
-          <h2 className="text-2xl sm:text-3xl font-bold gradient-text">
+          <MessageCircle className="text-[var(--accent)]" size={24} />
+          <h2 className="text-xl sm:text-3xl font-bold gradient-text">
             {copy.title}
           </h2>
         </div>
@@ -67,13 +67,13 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
       </motion.div>
 
       {/* Danh sách trạng thái được tách rõ để tránh vừa hiện loading vừa hiện empty. */}
-      <div className="space-y-6 mb-8 sm:mb-10">
+      <div className="mb-6 space-y-5 sm:mb-10 sm:space-y-6">
         {/* Loading State */}
         {loading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-8"
+            className="py-6 text-center sm:py-8"
           >
             <Loader2 className="mx-auto text-[var(--accent)] mb-3 animate-spin" size={32} />
             <p className="text-[var(--text-muted)] text-sm sm:text-base">{copy.loading}</p>
@@ -85,7 +85,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-8"
+            className="py-6 text-center sm:py-8"
           >
             <AlertCircle className="mx-auto text-red-500 mb-3" size={32} />
             <p className="text-[var(--text-muted)] text-sm sm:text-base mb-2">
@@ -109,7 +109,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-8 surface-card"
+            className="surface-card py-6 text-center sm:py-8"
           >
             <MessageCircle className="mx-auto text-[var(--text-soft)] mb-3" size={32} />
             <p className="text-[var(--text-muted)] text-sm sm:text-base">

@@ -272,7 +272,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
             rows={5}
             className="w-full px-4 py-3 bg-[rgba(244,241,232,0.06)] border border-[var(--line)] rounded-lg text-[var(--text)] placeholder-[var(--text-soft)] focus:outline-none focus:ring-2 focus:ring-[rgba(102,217,194,0.22)] focus:border-[var(--accent)] transition-all resize-none text-sm sm:text-base shadow-sm"
           />
-          <div className="flex justify-between items-center mt-1">
+          <div className="mt-1 flex items-center justify-between gap-3">
             <p className="text-xs text-[var(--text-soft)]">
               {copy.min}
             </p>
@@ -283,11 +283,11 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         </div>
 
         {/* Disable nút gửi khi form chưa đạt điều kiện tối thiểu để giảm request lỗi. */}
-        <div className="flex justify-end">
+        <div className="flex justify-stretch sm:justify-end">
           <Button
             type="submit"
             disabled={loading || !name.trim() || !email.trim() || !content.trim() || content.trim().length < 3}
-            className="min-w-[140px]"
+            className="w-full sm:w-auto sm:min-w-[140px]"
           >
             {loading ? (
               <>

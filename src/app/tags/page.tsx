@@ -21,7 +21,7 @@ export default function TagsPage() {
   const copy = locale === 'vi'
     ? {
         title: 'Thẻ chủ đề',
-        description: 'Khám phá ghi chú ShadowDev theo chủ đề, stack và vấn đề kỹ thuật.',
+        description: 'Khám phá ghi chú ShadowDev theo chủ đề, công nghệ và vấn đề kỹ thuật.',
         allTags: 'Tất cả thẻ',
         loadingTags: 'Đang tải thẻ...',
         failedTags: 'Không tải được thẻ',
@@ -54,9 +54,9 @@ export default function TagsPage() {
   // Tag có nhiều bài sẽ lớn hơn một chút để người đọc nhận biết chủ đề nổi bật.
   const getTagSize = (count: number, maxCount: number) => {
     const ratio = count / maxCount;
-    if (ratio > 0.7) return 'text-2xl';
-    if (ratio > 0.4) return 'text-xl';
-    if (ratio > 0.2) return 'text-lg';
+    if (ratio > 0.7) return 'text-xl sm:text-2xl';
+    if (ratio > 0.4) return 'text-lg sm:text-xl';
+    if (ratio > 0.2) return 'text-base sm:text-lg';
     return 'text-base';
   };
 
@@ -104,7 +104,7 @@ export default function TagsPage() {
 
           {/* Tags Cloud */}
           {!tagsLoading && !tagsError && tags.length > 0 && (
-            <div className="flex flex-wrap gap-3 sm:gap-4 justify-center items-center p-6 sm:p-8 surface-card">
+            <div className="surface-card flex flex-wrap items-center justify-center gap-3 p-5 sm:gap-4 sm:p-8">
               {tags.map((tag, index) => (
                 <motion.button
                   key={tag.name}
@@ -116,7 +116,7 @@ export default function TagsPage() {
                   onClick={() => setSelectedTag(selectedTag === tag.name ? null : tag.name)}
                   className={`
                     ${getTagSize(tag.count, maxCount)}
-                    font-semibold transition-all
+                    max-w-full break-words font-semibold transition-all
                     ${selectedTag === tag.name
                       ? 'text-[var(--accent)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--amber)]'
@@ -150,8 +150,8 @@ export default function TagsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)]">
+            <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:mb-8 sm:flex-row sm:items-center">
+              <h2 className="min-w-0 text-xl font-bold text-[var(--text)] sm:text-2xl">
                 {copy.postsTagged} <span className="gradient-text">#{selectedTag}</span>
               </h2>
               <button

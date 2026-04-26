@@ -11,11 +11,11 @@ import { usePosts } from '@/hooks/usePosts';
 import {
   AlertCircle,
   ArrowRight,
-  Bot,
+  Code2,
   Gauge,
-  GraduationCap,
   LayoutDashboard,
   Loader2,
+  Network,
   Radio,
   Send,
   ShieldCheck,
@@ -37,18 +37,18 @@ export default function Home() {
   const common = commonCopy[locale];
   const copy = locale === 'vi'
     ? {
-        snapshotEyebrow: 'Sẵn sàng phỏng vấn',
-        snapshotTitle: 'Đây không chỉ là blog. Đây là CV sống và bản demo sản phẩm.',
+        snapshotEyebrow: 'Cách ShadowDev vận hành',
+        snapshotTitle: 'Không chỉ đăng bài, ShadowDev được xây như một sản phẩm kỹ thuật.',
         snapshotDescription:
-          'ShadowDev trình bày năng lực qua các bề mặt có thể kiểm chứng: backend Laravel/PHP, hệ thống giáo dục, quy trình CMS/CRM, tư duy chatbot, frontend Vue/Next và hồ sơ dễ đọc cho recruiter.',
+          'Mỗi phần trên website đều có vai trò rõ ràng: bài viết để chia sẻ kiến thức, trang dự án để chứng minh cách triển khai, hồ sơ để tóm tắt năng lực, còn hệ thống quản trị giúp nội dung được xuất bản có kiểm soát.',
         openResume: 'Mở hồ sơ',
         viewProjects: 'Xem dự án',
         proofEyebrow: 'Đường dẫn chứng minh',
-        proofTitle: 'Lộ trình rõ ràng cho người đọc, recruiter và cộng tác viên.',
+        proofTitle: 'Những phần quan trọng giúp người đọc kiểm chứng năng lực.',
         featuredEyebrow: 'Nổi bật',
         featuredTitle: 'Ghi chú kỹ thuật mới nhất',
         featuredDescription:
-          'Bài viết chuyên sâu về DevOps, Docker, networking, kiến trúc, Git, bảo mật, hiệu năng và hệ thống web production.',
+          'Bài viết chuyên sâu về DevOps, Docker, mạng máy tính, kiến trúc hệ thống, Git, bảo mật, hiệu năng và vận hành web thực tế.',
         loadingPosts: 'Đang tải bài viết nổi bật...',
         failedPosts: 'Không tải được bài viết',
         viewAll: 'Xem tất cả bài viết',
@@ -57,67 +57,67 @@ export default function Home() {
         newsletterEyebrow: 'Tín hiệu',
         newsletterTitle: 'Theo dõi bản tin ShadowDev.',
         newsletterDescription:
-          'Nguồn ghi chú thực tế về hệ thống thiết kế, API an toàn mặc định và hiệu năng có thể đứng vững trong production.',
+          'Nhận các ghi chú thực tế về thiết kế hệ thống, API an toàn mặc định và hiệu năng đủ tốt khi đưa sản phẩm ra môi trường thật.',
         subscribe: 'Đăng ký',
-        newsletterNote: 'Không tracking pixel, không spam, không yêu cầu thông tin đăng nhập.',
+        newsletterNote: 'Không pixel theo dõi, không spam, không yêu cầu đăng nhập.',
         interviewSignals: [
           {
-            value: 'LAR',
-            label: 'Backend Laravel',
-            detail: 'Kinh nghiệm PHP/Laravel về API, auth, mô hình dữ liệu, logic CMS và module nghiệp vụ.',
+            value: 'ARCH',
+            label: 'Kiến trúc hệ thống',
+            detail: 'Thiết kế ranh giới nghiệp vụ, hợp đồng API, mô hình dữ liệu, bộ nhớ đệm, tác vụ nền và khả năng mở rộng theo tải.',
           },
           {
-            value: 'LMS',
-            label: 'Hệ thống giáo dục',
-            detail: 'Luồng LMS, nội dung khóa học, trạng thái học viên và vận hành sản phẩm giáo dục.',
+            value: 'OPS',
+            label: 'Quy trình phát hành',
+            detail: 'Quy trình tự động, Docker, môi trường nhất quán, chiến lược phát hành, rollback, log và metric để triển khai có kiểm soát.',
           },
           {
-            value: 'CRM',
-            label: 'Quy trình CMS / CRM',
-            detail: 'Dashboard admin, hồ sơ dữ liệu, bộ lọc, trạng thái xuất bản và màn hình vận hành lặp lại.',
+            value: 'SEC',
+            label: 'Nền tảng bảo mật',
+            detail: 'Xác thực, phiên đăng nhập, giới hạn tần suất, CSP, kiểm tra dữ liệu, phân quyền API và giảm dữ liệu nhạy cảm trả ra công khai.',
           },
           {
-            value: 'VUE',
-            label: 'UI Vue / Next',
-            detail: 'Giao diện hiện đại với Vue.js, Next.js, React, Tailwind CSS và UX responsive.',
+            value: 'PERF',
+            label: 'Hiệu năng giao diện',
+            detail: 'Core Web Vitals, phân cấp nội dung, giao diện responsive, trạng thái tải và giới hạn gói JavaScript để người dùng thấy nhanh.',
           },
         ],
         proofLinks: [
           {
-            icon: GraduationCap,
-            title: 'Hồ sơ năng lực',
-            detail: 'Dùng website như CV sống cho phỏng vấn Laravel, LMS, CMS, CRM, chatbot, Vue và Next.js.',
+            icon: Code2,
+            title: 'Hồ sơ kỹ thuật',
+            detail: 'Tóm tắt năng lực full-stack, kiến trúc, bảo mật, DevOps, giao diện và vận hành sản phẩm trên môi trường thật.',
             href: '/resume',
           },
           {
             icon: LayoutDashboard,
             title: 'Bản đồ dự án',
-            detail: 'Thể hiện tư duy sản phẩm qua nền tảng giáo dục và ứng dụng admin-heavy.',
+            detail: 'Các cụm dự án được mô tả theo vấn đề, quyết định kỹ thuật, rủi ro vận hành và tiêu chí đo lường.',
             href: '/projects',
           },
           {
             icon: ShieldCheck,
-            title: 'Mô hình bảo mật',
-            detail: 'Xem cách bảo vệ nội dung, session và API write kiểm tra quyền phía server.',
+            title: 'Tư duy bảo mật',
+            detail: 'Cách website xử lý phiên đăng nhập, kiểm tra nguồn gửi, giới hạn tần suất, lọc nội dung và ranh giới API công khai/quản trị.',
             href: '/privacy',
           },
           {
-            icon: Bot,
-            title: 'Góc nhìn chatbot',
-            detail: 'Biến kinh nghiệm chatbot giáo dục và tự động hóa thành ghi chú kỹ thuật dễ đọc.',
+            icon: Network,
+            title: 'Kho kiến thức',
+            detail: 'Bài viết chuyên sâu về DevOps, Docker, mạng máy tính, kiến trúc, Git, cơ sở dữ liệu và giám sát hệ thống.',
             href: '/blog',
           },
         ],
       }
     : {
-        snapshotEyebrow: 'Interview Ready',
-        snapshotTitle: 'This is more than a blog. It is a live CV and product demo.',
+        snapshotEyebrow: 'ShadowDev OS',
+        snapshotTitle: 'A technical journal designed like a product surface.',
         snapshotDescription:
-          'ShadowDev now presents your skills through working surfaces: Laravel/PHP backend, education systems, CMS/CRM workflows, chatbot thinking, Vue/Next frontend, and a recruiter-friendly resume path.',
+          'ShadowDev is not a pile of posts. It organizes architecture, DevOps, security, performance, content systems, and admin workflow into a readable, inspectable, and extensible engineering product.',
         openResume: 'Open resume',
         viewProjects: 'View projects',
         proofEyebrow: 'Proof Paths',
-        proofTitle: 'Clear paths for visitors, recruiters, and collaborators.',
+        proofTitle: 'Surfaces that show how ShadowDev thinks about technical products.',
         featuredEyebrow: 'Featured',
         featuredTitle: 'Latest Field Notes',
         featuredDescription:
@@ -135,49 +135,49 @@ export default function Home() {
         newsletterNote: 'No tracking pixels, no spam, no credential requests.',
         interviewSignals: [
           {
-            value: 'LAR',
-            label: 'Laravel backend',
-            detail: 'PHP/Laravel experience across APIs, auth, database modeling, CMS logic, and business modules.',
+            value: 'ARCH',
+            label: 'System architecture',
+            detail: 'Domain boundaries, API contracts, data models, caching, background jobs, and scalability under load.',
           },
           {
-            value: 'LMS',
-            label: 'Education systems',
-            detail: 'Experience with LMS workflows, course content, learner states, and education product operations.',
+            value: 'OPS',
+            label: 'DevOps delivery',
+            detail: 'Pipelines, Docker, environment parity, release strategy, rollback, logs, and metrics for controlled deploys.',
           },
           {
-            value: 'CRM',
-            label: 'CMS / CRM workflows',
-            detail: 'Admin dashboards, records, filters, publishing states, and repeated operational screens.',
+            value: 'SEC',
+            label: 'Security baseline',
+            detail: 'Auth, sessions, rate limits, CSP, validation, API authorization, and reduced public data exposure.',
           },
           {
-            value: 'VUE',
-            label: 'Vue / Next UI',
-            detail: 'Modern frontend interfaces with Vue.js, Next.js, React, Tailwind CSS, and responsive UX.',
+            value: 'PERF',
+            label: 'Performance UX',
+            detail: 'Core Web Vitals, content hierarchy, responsive UI, loading states, and bundle budgets for fast perception.',
           },
         ],
         proofLinks: [
           {
-            icon: GraduationCap,
-            title: 'Resume profile',
-            detail: 'Use this site as a live CV for Laravel, LMS, CMS, CRM, chatbot, Vue, and Next.js interviews.',
+            icon: Code2,
+            title: 'Technical profile',
+            detail: 'A concise view of full-stack, architecture, security, DevOps, frontend, and production product work.',
             href: '/resume',
           },
           {
             icon: LayoutDashboard,
-            title: 'Project cases',
-            detail: 'Show product-system thinking across education platforms and admin-heavy applications.',
+            title: 'Case map',
+            detail: 'Project clusters described by problem, technical decision, operational risk, and measurable criteria.',
             href: '/projects',
           },
           {
             icon: ShieldCheck,
-            title: 'Security model',
-            detail: 'Review the public privacy and security posture behind content, sessions, and server-checked API writes.',
+            title: 'Security posture',
+            detail: 'How the site handles sessions, origin checks, rate limits, content sanitization, and public/admin API boundaries.',
             href: '/privacy',
           },
           {
-            icon: Bot,
-            title: 'Education bot angle',
-            detail: 'Turn chatbot and education automation experience into readable technical notes.',
+            icon: Network,
+            title: 'Knowledge base',
+            detail: 'Deep articles on DevOps, Docker, networking, architecture, Git, databases, and observability.',
             href: '/blog',
           },
         ],
@@ -203,7 +203,7 @@ export default function Home() {
               <Gauge size={15} />
               {copy.snapshotEyebrow}
             </div>
-            <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">
+            <h2 className="text-2xl font-bold text-[var(--text)] sm:text-4xl">
               {copy.snapshotTitle}
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)] sm:text-base">
@@ -248,7 +248,7 @@ export default function Home() {
             <ShieldCheck size={15} />
             {copy.proofEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">
+          <h2 className="text-2xl font-bold text-[var(--text)] sm:text-4xl">
             {copy.proofTitle}
           </h2>
         </div>
@@ -349,7 +349,7 @@ export default function Home() {
               <Radio size={15} />
               {copy.newsletterEyebrow}
             </div>
-            <h3 className="mb-4 text-3xl font-bold text-[var(--text)] sm:text-4xl">{copy.newsletterTitle}</h3>
+            <h3 className="mb-4 text-2xl font-bold text-[var(--text)] sm:text-4xl">{copy.newsletterTitle}</h3>
             <p className="text-[var(--text-muted)] text-sm sm:text-base text-balance">
               {copy.newsletterDescription}
             </p>
@@ -361,9 +361,9 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="surface-card p-5 sm:p-6"
           >
-            <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex flex-col gap-3 sm:flex-row" onSubmit={(e) => e.preventDefault()}>
               <Input type="email" placeholder={`you@${siteConfig.shortName}.dev`} required className="flex-1" />
-              <Button type="submit" className="whitespace-nowrap">
+              <Button type="submit" className="w-full sm:w-auto sm:whitespace-nowrap">
                 <Send size={16} />
                 {copy.subscribe}
               </Button>

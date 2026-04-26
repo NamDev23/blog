@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Bot, GraduationCap, Server, ShieldCheck } from 'lucide-react';
+import { Activity, ArrowRight, Gauge, Server, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { siteConfig } from '@/lib/site';
@@ -20,29 +20,29 @@ export default function HeroSection() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'
     ? {
-        badge: `${siteConfig.shortName} / Laravel, hệ thống giáo dục và giao diện hiện đại`,
-        titleTop: 'Xây dựng hệ thống giáo dục',
-        titleAccent: 'bằng tư duy full-stack.',
-        description: `${siteConfig.name} là portfolio kỹ thuật cho backend Laravel/PHP, sản phẩm LMS/CMS/CRM, luồng chatbot giáo dục, giao diện Vue/Next, API an toàn và UX sẵn sàng production.`,
+        badge: `${siteConfig.shortName} / hệ thống an toàn, DevOps, hiệu năng`,
+        titleTop: 'Ghi chú kỹ thuật',
+        titleAccent: 'hệ thống web đáng tin cậy.',
+        description: `${siteConfig.name} là nơi ghi lại kinh nghiệm xây hệ thống web: kiến trúc, DevOps, Docker, bảo mật API, giám sát, hiệu năng giao diện và cách đưa sản phẩm lên môi trường thật có thể đo lường.`,
         primary: 'Đọc bài viết',
         secondary: 'Trao đổi dự án',
         stats: [
-          { icon: Server, number: 'Laravel', label: 'Module backend, API, auth và mô hình dữ liệu.' },
-          { icon: GraduationCap, number: 'LMS / CMS', label: 'Nội dung giáo dục, quy trình admin và hệ thống CRM.' },
-          { icon: Bot, number: 'Chatbot UX', label: 'Hỗ trợ học viên, thu lead và luồng tự động hóa.' },
+          { icon: Server, number: 'Kiến trúc', label: 'Ranh giới nghiệp vụ, hợp đồng API, luồng dữ liệu và khả năng mở rộng.' },
+          { icon: ShieldCheck, number: 'Bảo mật', label: 'Xác thực, giới hạn tần suất, CSP, quản lý secret và giảm bề mặt tấn công.' },
+          { icon: Gauge, number: 'Hiệu năng', label: 'Core Web Vitals, bộ nhớ đệm, giới hạn gói JavaScript và đường tải trên môi trường thật.' },
         ],
       }
     : {
-        badge: `${siteConfig.shortName} / Laravel, education systems, and modern UI`,
-        titleTop: 'Building education systems',
-        titleAccent: 'with full-stack discipline.',
-        description: `${siteConfig.name} is a technical portfolio for Laravel/PHP backend work, LMS/CMS/CRM products, education chatbot flows, Vue/Next interfaces, secure APIs, and production-ready UX.`,
+        badge: `${siteConfig.shortName} / secure systems, DevOps, performance`,
+        titleTop: 'Engineering notes for',
+        titleAccent: 'reliable web systems.',
+        description: `${siteConfig.name} is a technical journal about web architecture, DevOps, Docker, API security, observability, frontend performance, and moving products from idea to measurable production behavior.`,
         primary: 'Read the journal',
         secondary: 'Discuss a build',
         stats: [
-          { icon: Server, number: 'Laravel', label: 'Backend modules, APIs, auth, and data modeling.' },
-          { icon: GraduationCap, number: 'LMS / CMS', label: 'Education content, admin workflows, CRM systems.' },
-          { icon: Bot, number: 'Chatbot UX', label: 'Learning support, lead capture, and automation flows.' },
+          { icon: Server, number: 'Architecture', label: 'Domain boundaries, API contracts, data flow, and scalability.' },
+          { icon: ShieldCheck, number: 'Security', label: 'Auth, rate limits, CSP, secret handling, and attack surface reduction.' },
+          { icon: Gauge, number: 'Performance', label: 'Core Web Vitals, caching, bundle budgets, and production loading paths.' },
         ],
       };
 
@@ -68,7 +68,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[88vh] overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
+    <section className="relative min-h-[88vh] overflow-hidden px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
       <div className="absolute inset-0 -z-10">
         <Image
           src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1800&h=1200&fit=crop"
@@ -89,14 +89,14 @@ export default function HeroSection() {
         animate="visible"
       >
         <div className="max-w-3xl">
-          <motion.div variants={itemVariants} className="mb-6 inline-flex items-center gap-2 border border-[var(--line-strong)] bg-[rgba(13,18,15,0.68)] px-3 py-2 text-sm text-[var(--text-muted)]">
-            <ShieldCheck size={16} className="text-[var(--accent)]" />
-            <span>{copy.badge}</span>
+          <motion.div variants={itemVariants} className="mb-6 inline-flex max-w-full items-center gap-2 border border-[var(--line-strong)] bg-[rgba(13,18,15,0.68)] px-3 py-2 text-xs text-[var(--text-muted)] sm:text-sm">
+            <Activity size={16} className="text-[var(--accent)]" />
+            <span className="min-w-0">{copy.badge}</span>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="mb-6 max-w-3xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl"
+            className="mb-6 max-w-3xl text-3xl font-black leading-tight sm:text-5xl lg:text-6xl"
           >
             <span className="block text-[var(--text)]">{copy.titleTop}</span>
             <span className="gradient-text block">{copy.titleAccent}</span>
@@ -104,7 +104,7 @@ export default function HeroSection() {
 
           <motion.p
             variants={itemVariants}
-            className="mb-9 max-w-2xl text-base leading-8 text-[var(--text-muted)] sm:text-lg text-balance"
+            className="mb-8 max-w-2xl text-base leading-7 text-[var(--text-muted)] text-balance sm:mb-9 sm:text-lg sm:leading-8"
           >
             {copy.description}
           </motion.p>
@@ -130,7 +130,7 @@ export default function HeroSection() {
 
           <motion.div
             variants={itemVariants}
-            className="mt-12 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3"
+            className="mt-10 grid max-w-3xl grid-cols-1 gap-3 sm:mt-12 sm:grid-cols-3"
           >
             {copy.stats.map((stat) => {
               const Icon = stat.icon;

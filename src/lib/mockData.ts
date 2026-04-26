@@ -1553,4 +1553,225 @@ ttl: 600 seconds
     updated_at: toIsoDate('2026-04-26T11:00:00+07:00'),
     view_count: 0,
   },
+  {
+    id: '10000000-0000-4000-8000-000000000019',
+    title: 'Bản thiết kế ShadowDev: xây blog kỹ thuật như một hệ thống sản phẩm',
+    slug: 'shadowdev-blueprint-technical-blog-product-system',
+    content: `
+      <h2>Blog kỹ thuật không chỉ là nơi đăng bài</h2>
+      <p>Một blog kỹ thuật chuyên nghiệp cần được thiết kế như một hệ thống sản phẩm: có mô hình nội dung rõ ràng, quy trình soạn thảo, trạng thái bản nháp/đã xuất bản, dữ liệu SEO, thẻ xem trước, bảo mật khu quản trị và số liệu đo lường. Nếu chỉ lưu vài bài viết tĩnh, hệ thống có thể chạy được lúc đầu nhưng rất khó mở rộng khi số lượng bài, tác giả, bình luận và ngôn ngữ tăng lên.</p>
+      <p>ShadowDev nên được nhìn như một nền tảng tri thức nhỏ. Mỗi bài viết không chỉ trả lời một câu hỏi kỹ thuật mà còn cho thấy cách người xây hệ thống suy nghĩ về kiến trúc, bảo mật, hiệu năng và vận hành.</p>
+
+      <h2>Mô hình nội dung nên bắt đầu từ domain</h2>
+      <p>Bài viết không chỉ có tiêu đề và nội dung. Một bài viết sẵn sàng chạy thật thường cần slug ổn định, mô tả ngắn, ảnh đại diện, danh mục, thẻ, tiêu đề SEO, mô tả SEO, canonical URL, trạng thái noindex, ngày xuất bản, ngày cập nhật, lượt xem và bản dịch theo ngôn ngữ. Các trường này giúp trình soạn thảo, trang public, RSS, sitemap, Open Graph và khu quản trị dùng cùng một nguồn dữ liệu.</p>
+      <pre><code class="language-ts">type Post = {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  publishedAt: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  translations?: PostTranslation[];
+};</code></pre>
+      <p>Điểm quan trọng là phân biệt dữ liệu chuẩn và dữ liệu hiển thị theo ngôn ngữ. Slug có thể giữ chung để canonical/hreflang ổn định, trong khi tiêu đề, mô tả ngắn, nội dung và dữ liệu SEO được dịch theo từng ngôn ngữ.</p>
+
+      <h2>Workflow song ngữ phải có trạng thái rõ</h2>
+      <p>Với website có tiếng Việt và tiếng Anh, cách chuyên nghiệp không phải bắt người quản trị nhập hai bản thủ công mọi lúc. Hệ thống nên hỗ trợ tạo bản dịch tự động, nhưng vẫn phải cho phép con người đọc lại trước khi xuất bản. Trạng thái tốt gồm: bản gốc đang nháp, bản dịch mới tạo, bản dịch đã duyệt và bản đã công khai.</p>
+      <ul>
+        <li><strong>Bản nháp:</strong> nội dung đang soạn, chưa xuất hiện công khai.</li>
+        <li><strong>Mới tạo:</strong> bản dịch máy tạo, cần kiểm tra thuật ngữ.</li>
+        <li><strong>Đã duyệt:</strong> đã đọc lại tiêu đề, mô tả, heading, code block và SEO.</li>
+        <li><strong>Đã xuất bản:</strong> route công khai, RSS và sitemap có thể dùng.</li>
+      </ul>
+      <p>Dịch tự động có thể tăng tốc, nhưng không nên coi là nguồn sự thật tuyệt đối. Với bài kỹ thuật, phải kiểm tra thuật ngữ như “phân quyền”, “idempotency”, “rollback”, “xóa cache”, “least privilege” và các đoạn code.</p>
+
+      <h2>SEO nên được hỗ trợ ngay trong editor</h2>
+      <p>SEO không phải việc nhét keyword. Editor nên gợi ý độ dài title, description, slug, heading hierarchy, internal links và focus keyword. Một bài chuẩn nên có H1 duy nhất trên page, H2 rõ ý, meta description khoảng 120-160 ký tự, URL dễ đọc, ảnh Open Graph phù hợp và link nội bộ tới bài liên quan.</p>
+      <p>Với blog kỹ thuật, SEO tốt còn nằm ở độ tin cậy nội dung: giải thích đúng, có checklist, có ví dụ code, có giới hạn áp dụng và có nguồn tham khảo chính thức khi nhắc đến tiêu chuẩn hoặc công nghệ.</p>
+
+      <h2>Bảo mật admin là một phần của sản phẩm nội dung</h2>
+      <p>CMS quản trị là nơi có quyền ghi nội dung công khai, vì vậy cần được bảo vệ như một bề mặt quan trọng. Không lưu khóa quản trị trong localStorage, không tin vào trạng thái UI, không cho client gọi service role key và không để bản nháp lọt ra API công khai. Endpoint ghi phải kiểm tra phiên đăng nhập ở server, kiểm tra payload, lọc HTML và giới hạn tần suất các hành động nhạy cảm.</p>
+      <p>Nếu có bình luận và tin nhắn liên hệ, khu quản trị cần kiểm duyệt, phân trang, trạng thái xử lý và audit trail tối thiểu. Một hệ thống blog đáng tin không chỉ đăng bài hay mà còn kiểm soát dữ liệu người dùng gửi vào.</p>
+
+      <h2>Đo lường phải trung thực</h2>
+      <p>Lượt xem nên dựa trên sự kiện đọc bài thật, không dùng số giả. Cách thực dụng là ghi view khi người dùng mở trang bài viết, có debounce theo bài viết + người xem ẩn danh + thời gian, sau đó cập nhật số qua API hoặc RPC. Với traffic lớn hơn, có thể chuyển sang bảng sự kiện hoặc hệ thống phân tích riêng để tránh ghi trực tiếp quá nhiều vào bảng posts.</p>
+      <p>Chỉ số nên được giải thích rõ trong khu quản trị: views là lượt xem hợp lệ, comments là bình luận đã nhận, approved comments là bình luận public. Minh bạch giúp người đọc tin vào hệ thống.</p>
+
+      <h2>Checklist blueprint</h2>
+      <ul>
+        <li>Mô hình bài viết có đủ nội dung, SEO, trạng thái xuất bản và bản dịch.</li>
+        <li>Trình soạn thảo có xem trước card public và xem trước bài viết.</li>
+        <li>Bản dịch tự động cần trạng thái review trước publish.</li>
+        <li>API công khai không trả bản nháp, email bình luận hoặc field chỉ dành cho quản trị.</li>
+        <li>Route ghi của quản trị có xác thực server-side, kiểm tra dữ liệu, lọc nội dung và giới hạn tần suất.</li>
+        <li>Danh sách blog, bài trong admin, bình luận và tin nhắn đều có phân trang.</li>
+        <li>Views là dữ liệu thật, có cơ chế chống đếm lặp đơn giản.</li>
+      </ul>
+
+      <h2>Nguồn tham khảo chính</h2>
+      <ul>
+        <li><a href="https://nextjs.org/docs/app/building-your-application/optimizing/metadata">Next.js Docs: Metadata</a></li>
+        <li><a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide">Google Search Central: SEO Starter Guide</a></li>
+        <li><a href="https://supabase.com/docs/guides/database/postgres/row-level-security">Supabase Docs: Row Level Security</a></li>
+      </ul>
+    `,
+    excerpt: 'Cách xây blog kỹ thuật như một hệ thống sản phẩm: mô hình nội dung, song ngữ, SEO, bảo mật quản trị, phân trang và lượt xem thật.',
+    featured_image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=700&fit=crop',
+    seo_title: 'Bản thiết kế ShadowDev cho blog kỹ thuật',
+    seo_description: 'Cách xây blog kỹ thuật chuyên nghiệp với mô hình nội dung, song ngữ, SEO, bảo mật quản trị, phân trang và lượt xem thật.',
+    canonical_url: null,
+    noindex: false,
+    author_id: defaultAuthorId,
+    category: 'Architecture',
+    tags: ['architecture', 'technical-blog', 'seo', 'cms'],
+    published_at: toIsoDate('2026-04-27T09:00:00+07:00'),
+    created_at: toIsoDate('2026-04-27T09:00:00+07:00'),
+    updated_at: toIsoDate('2026-04-27T09:00:00+07:00'),
+    view_count: 0,
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000020',
+    title: 'Nền tảng bảo mật API cho Next.js: form, bình luận và quản trị',
+    slug: 'api-security-baseline-nextjs-form-comment-admin-route',
+    content: `
+      <h2>Nền tảng bảo mật phải bắt đầu từ mô hình rủi ro</h2>
+      <p>Một ứng dụng Next.js có form liên hệ, bình luận và CMS quản trị sẽ có nhiều bề mặt tấn công: spam, dò mật khẩu, CSRF, XSS, IDOR/BOLA, lộ bản nháp, lộ email, lạm dụng API ghi và dependency lỗi thời. Nếu chỉ kiểm tra dữ liệu ở frontend, attacker có thể bỏ qua UI và gọi thẳng API.</p>
+      <p>Nền tảng bảo mật tốt là tập các lớp phòng thủ vừa đủ cho sản phẩm hiện tại, nhưng có đường nâng cấp khi traffic và dữ liệu nhạy cảm tăng lên.</p>
+
+      <h2>Validate và normalize input ở server</h2>
+      <p>Kiểm tra ở client giúp UX tốt hơn, nhưng kiểm tra ở server mới là ranh giới thật. Với form công khai, hãy trim chuỗi, giới hạn độ dài, kiểm tra email, loại bỏ field không hợp lệ và trả mã lỗi ổn định để UI map sang từng ngôn ngữ.</p>
+      <pre><code class="language-ts">const payload = {
+  name: cleanText(body.name, 80),
+  email: normalizeEmail(body.email),
+  subject: cleanText(body.subject, 120),
+  message: cleanText(body.message, 3000),
+};</code></pre>
+      <p>Nếu API nhận HTML từ CMS, cần sanitize với allowlist tag/attribute. Không render HTML user gửi bằng <code>dangerouslySetInnerHTML</code> nếu chưa kiểm soát nguồn và sanitize.</p>
+
+      <h2>Authentication không thay thế authorization</h2>
+      <p>Route quản trị cần xác thực, nhưng sau đó vẫn phải kiểm tra quyền theo từng hành động. Ví dụ user được đọc bình luận chưa chắc được xóa bình luận; user được sửa bản nháp chưa chắc được xuất bản. Với hệ thống nhỏ chỉ có một khóa quản trị, vẫn nên giữ hàm guard tập trung để sau này thay bằng nhiều user/role dễ hơn.</p>
+      <p>Đối với route công khai, đừng trả field chỉ dành cho quản trị. Bình luận public không cần email tác giả, tin nhắn liên hệ không có route đọc công khai, bản nháp không được xuất hiện trong danh sách blog.</p>
+
+      <h2>CSRF, Origin và SameSite cookie</h2>
+      <p>Nếu admin dùng cookie, write request cần chống CSRF. SameSite cookie giúp giảm rủi ro, nhưng Origin hoặc Sec-Fetch-Site check vẫn hữu ích cho API mutation. Với hành động rủi ro cao, có thể thêm CSRF token riêng.</p>
+      <ul>
+        <li>Cookie admin nên HttpOnly để JavaScript không đọc được.</li>
+        <li>Production cookie nên Secure và SameSite phù hợp.</li>
+        <li>Write endpoint kiểm tra Origin hợp lệ.</li>
+        <li>Preflight/CORS không nên mở rộng nếu không cần.</li>
+      </ul>
+
+      <h2>Giới hạn tần suất theo từng bề mặt</h2>
+      <p>Không phải route nào cũng cần cùng một giới hạn. Đăng nhập cần giới hạn chặt theo IP và identifier. Liên hệ/bình luận cần giới hạn theo IP, user agent hoặc fingerprint nhẹ. Tìm kiếm có thể giới hạn rộng hơn. Khi vượt giới hạn, API nên trả 429 và UI nên hiển thị thông báo theo ngôn ngữ hiện tại.</p>
+      <p>Ở môi trường multi-instance, in-memory rate limit không đủ ổn định; Redis hoặc database-backed counter sẽ đáng tin hơn.</p>
+
+      <h2>Logging và audit trail</h2>
+      <p>Bảo mật không chỉ là ngăn chặn. Khi có sự cố, bạn cần biết request nào bị từ chối, route nào bị spam, admin nào đã thay đổi bài viết và payload lỗi thuộc loại gì. Log không được chứa secret, password, token hoặc dữ liệu nhạy cảm không cần thiết.</p>
+      <p>Audit log tối thiểu nên ghi actor, action, resource, timestamp và metadata vừa đủ. Với blog/CMS, các hành động như publish, delete, approve comment và archive contact message nên có dấu vết.</p>
+
+      <h2>Checklist nền tảng cho Next.js API</h2>
+      <ul>
+        <li>Server validation cho mọi API, không tin vào frontend.</li>
+        <li>Admin key/session chỉ xử lý ở server, không lưu trong localStorage.</li>
+        <li>Write route có auth, authorization, Origin check và rate limit.</li>
+        <li>HTML CMS được sanitize trước khi lưu hoặc trước khi render.</li>
+        <li>Public response giảm field nhạy cảm và không trả draft.</li>
+        <li>Security headers gồm CSP, nosniff, frame policy và referrer policy.</li>
+        <li>Dependency được audit định kỳ và secret có quy trình rotate.</li>
+      </ul>
+
+      <h2>Nguồn tham khảo chính</h2>
+      <ul>
+        <li><a href="https://owasp.org/API-Security/editions/2023/en/0x00-header/">OWASP API Security Top 10 2023</a></li>
+        <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html">OWASP Input Validation Cheat Sheet</a></li>
+        <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html">OWASP Node.js Security Cheat Sheet</a></li>
+      </ul>
+    `,
+    excerpt: 'Nền tảng bảo mật cho Next.js API: kiểm tra dữ liệu ở server, phân quyền, CSRF/Origin, cookie SameSite, rate limit, lọc HTML và audit log.',
+    featured_image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&h=700&fit=crop',
+    seo_title: 'Nền tảng bảo mật API cho Next.js',
+    seo_description: 'Checklist bảo mật Next.js API cho form, bình luận và quản trị: validation, phân quyền, CSRF, rate limit và audit log.',
+    canonical_url: null,
+    noindex: false,
+    author_id: defaultAuthorId,
+    category: 'Security',
+    tags: ['nextjs', 'api-security', 'csrf', 'xss'],
+    published_at: toIsoDate('2026-04-27T10:00:00+07:00'),
+    created_at: toIsoDate('2026-04-27T10:00:00+07:00'),
+    updated_at: toIsoDate('2026-04-27T10:00:00+07:00'),
+    view_count: 0,
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000021',
+    title: 'Giám sát ứng dụng web nhỏ: log, metric, trace và review sự cố',
+    slug: 'observability-web-app-log-metric-trace-incident-review',
+    content: `
+      <h2>Giám sát không chỉ dành cho hệ thống lớn</h2>
+      <p>Nhiều team nhỏ bỏ qua observability vì nghĩ chỉ cần khi dùng microservices hoặc Kubernetes. Thực tế, blog, CMS, CRM nội bộ hay SaaS nhỏ đều cần biết hệ thống đang lỗi ở đâu, user bị ảnh hưởng thế nào và lần deploy nào có liên quan. Không có dữ liệu, mọi incident đều biến thành đoán mò.</p>
+      <p>Giám sát thực dụng bắt đầu từ ba câu hỏi: chuyện gì đã xảy ra, hệ thống đang khỏe hay yếu, và request mất thời gian ở đoạn nào. Ba câu hỏi này tương ứng với log, metric và trace.</p>
+
+      <h2>Log cần có cấu trúc</h2>
+      <p>Log dạng text tự do rất khó tìm khi lỗi tăng. Log có cấu trúc nên có thời gian, cấp độ, thông điệp, route, method, status, duration, request id và user/admin id nếu phù hợp. Không log secret, token, password hoặc nội dung nhạy cảm của form.</p>
+      <pre><code class="language-json">{
+  "level": "error",
+  "route": "/api/comments",
+  "status": 429,
+  "duration_ms": 18,
+  "request_id": "req_8f2",
+  "message": "rate_limited"
+}</code></pre>
+      <p>Request id hoặc correlation id giúp nối log frontend, API, database và background job lại với nhau.</p>
+
+      <h2>Metric nên đo triệu chứng người dùng</h2>
+      <p>CPU và memory quan trọng, nhưng cảnh báo tốt nên ưu tiên triệu chứng người dùng thấy: tỷ lệ lỗi, độ trễ p95/p99, timeout, đăng nhập lỗi tăng bất thường, form liên hệ lỗi, gửi bình luận lỗi và trang tải chậm hơn trước. Nếu chỉ cảnh báo CPU 80%, bạn dễ nhận nhiều cảnh báo nhiễu nhưng bỏ lỡ lỗi người dùng thật.</p>
+      <ul>
+        <li><strong>Traffic:</strong> request rate theo route quan trọng.</li>
+        <li><strong>Error:</strong> 4xx/5xx rate, validation failures, rate limit count.</li>
+        <li><strong>Latency:</strong> p50, p95, p99 cho API và database query chính.</li>
+        <li><strong>Frontend:</strong> LCP, CLS, INP, JS errors và API failure rate.</li>
+      </ul>
+
+      <h2>Trace giúp thấy request đi qua đâu</h2>
+      <p>Trace đặc biệt hữu ích khi một request chậm vì nhiều bước: auth, database, external API, sanitize HTML, gửi email hoặc ghi event. Với hệ thống nhỏ, bạn có thể bắt đầu bằng manual timing log; khi phức tạp hơn, OpenTelemetry là hướng tiêu chuẩn để instrument service.</p>
+      <p>Không cần instrument mọi thứ từ ngày đầu. Hãy bắt đầu với route quan trọng: đăng nhập, chi tiết bài viết, gửi bình luận, gửi liên hệ, xuất bản bài và API ghi nhận lượt xem.</p>
+
+      <h2>Review sự cố không phải để tìm người có lỗi</h2>
+      <p>Sau incident, mục tiêu là cải thiện hệ thống. Review tốt ghi lại timeline, impact, nguyên nhân kỹ thuật, yếu tố khiến phát hiện chậm, điều giúp khôi phục nhanh và action item cụ thể. Nếu chỉ kết luận “cẩn thận hơn”, hệ thống sẽ lặp lại lỗi.</p>
+      <p>Một action item tốt có owner, deadline và tiêu chí hoàn thành: thêm alert 5xx cho contact API, thêm test sanitize HTML, viết rollback note cho migration, hoặc tạo dashboard p95 latency.</p>
+
+      <h2>Checklist giám sát cho ShadowDev</h2>
+      <ul>
+        <li>API log có route, status, duration và request id.</li>
+        <li>Contact/comment failure được đếm và hiển thị trong admin nếu cần.</li>
+        <li>View tracking có debounce để tránh đếm lặp quá mức.</li>
+        <li>Admin mutation quan trọng có audit trail.</li>
+        <li>Frontend theo dõi Web Vitals và runtime error ở các trang chính.</li>
+        <li>Alert tập trung vào user impact, không chỉ tài nguyên máy chủ.</li>
+        <li>Mỗi incident có review ngắn và action item có owner.</li>
+      </ul>
+
+      <h2>Nguồn tham khảo chính</h2>
+      <ul>
+        <li><a href="https://opentelemetry.io/docs/what-is-opentelemetry/">OpenTelemetry Docs: What is OpenTelemetry?</a></li>
+        <li><a href="https://sre.google/sre-book/monitoring-distributed-systems/">Google SRE Book: Monitoring Distributed Systems</a></li>
+        <li><a href="https://web.dev/articles/vitals">web.dev: Core Web Vitals</a></li>
+      </ul>
+    `,
+    excerpt: 'Hướng dẫn giám sát cho ứng dụng web nhỏ: log có cấu trúc, metric theo ảnh hưởng người dùng, trace, review sự cố và checklist áp dụng.',
+    featured_image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=700&fit=crop',
+    seo_title: 'Giám sát cho ứng dụng web nhỏ',
+    seo_description: 'Cách áp dụng log, metric, trace, Web Vitals và review sự cố cho ứng dụng web nhỏ cần vận hành thực tế.',
+    canonical_url: null,
+    noindex: false,
+    author_id: defaultAuthorId,
+    category: 'Observability',
+    tags: ['observability', 'logging', 'metrics', 'incident-response'],
+    published_at: toIsoDate('2026-04-27T11:00:00+07:00'),
+    created_at: toIsoDate('2026-04-27T11:00:00+07:00'),
+    updated_at: toIsoDate('2026-04-27T11:00:00+07:00'),
+    view_count: 0,
+  },
 ];

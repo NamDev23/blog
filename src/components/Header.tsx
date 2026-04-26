@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Terminal } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { exploreLinks } from '@/lib/navigation';
@@ -82,7 +83,15 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 border border-[var(--line-strong)] bg-[rgba(244,241,232,0.06)] rounded-lg flex items-center justify-center group-hover:border-[var(--accent)] transition-all"
             >
-              <Terminal size={18} className="text-[var(--accent)]" />
+              <Image
+                src="/images/icon-192.png"
+                alt=""
+                width={24}
+                height={24}
+                priority
+                unoptimized
+                className="h-6 w-6 object-contain"
+              />
             </motion.div>
             <span className="text-lg sm:text-xl font-bold text-[var(--text)] hidden sm:inline whitespace-nowrap">
               {siteConfig.name}

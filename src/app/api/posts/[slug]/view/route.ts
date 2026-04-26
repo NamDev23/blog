@@ -135,14 +135,14 @@ async function trackPostView(
   const viewMetadata = getViewMetadata(request);
   const rpcClient = isSupabaseAdminConfigured ? supabaseAdmin : supabase;
   const { data, error } = await rpcClient.rpc('track_post_view', {
-    post_slug: slug,
-    visitor_hash: viewMetadata.visitorHash,
-    ip_hash: viewMetadata.ipHash,
-    user_agent_hash: viewMetadata.userAgentHash,
-    view_bucket: viewMetadata.viewBucket,
-    referrer: viewMetadata.referrer,
-    locale: viewMetadata.locale,
-    path: viewMetadata.path,
+    p_post_slug: slug,
+    p_visitor_hash: viewMetadata.visitorHash,
+    p_ip_hash: viewMetadata.ipHash,
+    p_user_agent_hash: viewMetadata.userAgentHash,
+    p_view_bucket: viewMetadata.viewBucket,
+    p_referrer: viewMetadata.referrer,
+    p_locale: viewMetadata.locale,
+    p_path: viewMetadata.path,
   });
 
   if (!error && Array.isArray(data) && data[0]) {

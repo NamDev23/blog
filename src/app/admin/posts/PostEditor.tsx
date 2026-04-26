@@ -90,7 +90,7 @@ const initialLocalizedFields: Record<ContentLocale, LocalizedFields> = {
     title: '',
     excerpt: '',
     content:
-      '<h2>Bối cảnh</h2><p>Mô tả sản phẩm, vai trò người dùng, vấn đề nghiệp vụ và workflow giáo dục.</p><h2>Triển khai</h2><p>Giải thích quyết định Laravel/API/CMS/frontend, tradeoff và kết quả đo được.</p><h2>Kết quả</h2><p>Tóm tắt tác động, đánh đổi hoặc bài học.</p>',
+      '<h2>Bối cảnh</h2><p>Mô tả vấn đề kỹ thuật, người dùng bị ảnh hưởng, ràng buộc hệ thống và rủi ro production.</p><h2>Triển khai</h2><p>Giải thích quyết định architecture/API/security/performance, tradeoff và kết quả đo được.</p><h2>Kết quả</h2><p>Tóm tắt tác động, đánh đổi, checklist áp dụng và bài học.</p>',
     seoTitle: '',
     seoDescription: '',
   },
@@ -98,7 +98,7 @@ const initialLocalizedFields: Record<ContentLocale, LocalizedFields> = {
     title: '',
     excerpt: '',
     content:
-      '<h2>Context</h2><p>Describe the product, user role, business problem, and education workflow.</p><h2>Implementation</h2><p>Explain the Laravel/API/CMS/frontend decision, tradeoffs, and measurable outcome.</p><h2>Result</h2><p>Summarize the impact, tradeoff, or lesson.</p>',
+      '<h2>Context</h2><p>Describe the engineering problem, affected users, system constraints, and production risk.</p><h2>Implementation</h2><p>Explain the architecture/API/security/performance decision, tradeoffs, and measurable outcome.</p><h2>Result</h2><p>Summarize the impact, tradeoff, reusable checklist, and lesson.</p>',
     seoTitle: '',
     seoDescription: '',
   },
@@ -108,8 +108,8 @@ const initialForm: FormState = {
   vi: initialLocalizedFields.vi,
   en: initialLocalizedFields.en,
   slug: '',
-  category: 'Education Tech',
-  tags: 'laravel, lms, cms',
+  category: 'Architecture',
+  tags: 'architecture, security, devops',
   featuredImage: '',
   authorId: DEFAULT_AUTHOR_ID,
   publishMode: 'draft',
@@ -123,12 +123,12 @@ const languageLabels: Record<ContentLocale, string> = {
 };
 
 const topicSuggestions = [
-  'Laravel LMS architecture',
-  'CMS admin workflow',
-  'CRM pipeline for education',
-  'Education chatbot flow',
-  'Vue dashboard UI',
-  'Next.js portfolio SEO',
+  'API security hardening',
+  'Docker production runtime',
+  'Observability incident checklist',
+  'Database backup and restore',
+  'Frontend performance budget',
+  'Next.js technical SEO',
 ];
 
 export default function PostEditor({ mode, slug }: PostEditorProps) {
@@ -551,8 +551,8 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
               {mode === 'edit' ? 'Edit content, SEO, and publish state.' : 'Create a blog post with SEO built in.'}
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)] sm:text-base">
-              Write articles that support your portfolio: Laravel, LMS, CMS, CRM, chatbot education, Vue.js, Next.js,
-              architecture notes, and admin UX decisions.
+              Write articles that support ShadowDev: architecture, API security, DevOps, Docker, observability,
+              performance, database reliability, technical SEO, and admin UX decisions.
             </p>
           </div>
           <Button asChild variant="outline">
@@ -609,7 +609,7 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                         <Input
                           value={activeFields.title}
                           onChange={(event) => updateLocalizedField(activeLocale, 'title', event.target.value)}
-                          placeholder={activeLocale === 'vi' ? 'Bài học khi xây LMS bằng Laravel' : 'Lessons from building an LMS in Laravel'}
+                          placeholder={activeLocale === 'vi' ? 'Checklist harden API admin trong Next.js' : 'Hardening an admin API in Next.js'}
                           required
                         />
                       </label>

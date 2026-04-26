@@ -35,6 +35,7 @@ export const categoryLabels: Record<string, Record<Locale, string>> = {
   Git: { en: 'Git', vi: 'Git' },
   Security: { en: 'Security', vi: 'Bảo mật' },
   Performance: { en: 'Performance', vi: 'Hiệu năng' },
+  Observability: { en: 'Observability', vi: 'Giám sát' },
   Database: { en: 'Database', vi: 'Cơ sở dữ liệu' },
   Kubernetes: { en: 'Kubernetes', vi: 'Kubernetes' },
   SEO: { en: 'SEO', vi: 'SEO' },

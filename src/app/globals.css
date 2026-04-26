@@ -95,15 +95,15 @@ h6 {
 }
 
 h1 {
-  font-size: clamp(2.6rem, 6vw, 5.8rem);
+  font-size: 2.25rem;
 }
 
 h2 {
-  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-size: 1.75rem;
 }
 
 h3 {
-  font-size: clamp(1.35rem, 2.5vw, 2.05rem);
+  font-size: 1.25rem;
 }
 
 p {
@@ -138,11 +138,14 @@ code {
   border-radius: 6px;
   font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
   font-size: 0.9em;
+  overflow-wrap: anywhere;
 }
 
 pre {
   /* Fallback style cho code block chưa được enhance thành terminal wrapper. */
   overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--line);
   background: #090d0b;
   color: var(--text);
@@ -177,11 +180,11 @@ pre code {
 }
 
 .section-padding {
-  padding-block: clamp(3rem, 6vw, 6rem);
+  padding-block: 2.5rem;
 }
 
 .section-padding-sm {
-  padding-block: clamp(1.5rem, 4vw, 3rem);
+  padding-block: 1.5rem;
 }
 
 .text-balance {
@@ -250,6 +253,18 @@ pre code {
 .prose {
   /* Prose dành cho HTML bài viết render từ CMS/editor. */
   color: var(--text-muted);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.prose p,
+.prose li,
+.prose blockquote,
+.prose h2,
+.prose h3 {
+  overflow-wrap: anywhere;
 }
 
 .prose h2,
@@ -339,6 +354,8 @@ pre code {
 .prose .code-terminal {
   /* Wrapper do `enhanceCodeBlocks` inject để code block có tiêu đề và nút copy. */
   overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
   margin: 1.5rem 0;
   border: 1px solid rgba(102, 217, 194, 0.24);
   border-radius: 8px;
@@ -351,6 +368,7 @@ pre code {
 .prose .code-terminal__bar {
   display: grid;
   grid-template-columns: auto 1fr auto;
+  min-width: 0;
   align-items: center;
   gap: 0.75rem;
   border-bottom: 1px solid var(--line);
@@ -387,6 +405,11 @@ pre code {
 
 .prose .code-terminal__label {
   justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #c9d8d1;
   font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
   font-size: 0.72rem;
@@ -468,6 +491,8 @@ pre code {
   border: 0;
   border-radius: 0;
   background: #080c0a;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .prose .code-terminal pre code {
@@ -551,6 +576,73 @@ pre code {
 
 .rich-post-editor [data-resize-handle="top-left"] {
   cursor: nwse-resize;
+}
+
+@media (min-width: 640px) {
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  h3 {
+    font-size: 1.65rem;
+  }
+
+  .section-padding {
+    padding-block: 4rem;
+  }
+
+  .section-padding-sm {
+    padding-block: 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 5.8rem;
+  }
+
+  h2 {
+    font-size: 3.6rem;
+  }
+
+  h3 {
+    font-size: 2.05rem;
+  }
+
+  .section-padding {
+    padding-block: 6rem;
+  }
+
+  .section-padding-sm {
+    padding-block: 3rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .container-custom {
+    padding-inline: 0.875rem;
+  }
+
+  .section-padding {
+    padding-block: 2.25rem;
+  }
+
+  .micro-label {
+    font-size: 0.68rem;
+  }
+
+  .prose {
+    font-size: 0.92rem;
+  }
+
+  .prose .code-terminal__bar {
+    gap: 0.45rem;
+    padding-inline: 0.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

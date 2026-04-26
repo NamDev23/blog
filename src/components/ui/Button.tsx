@@ -23,7 +23,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(102,217,194,0.6)] disabled:opacity-55 disabled:cursor-not-allowed";
+  "inline-flex max-w-full min-w-0 items-center justify-center gap-2 text-center font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(102,217,194,0.6)] disabled:cursor-not-allowed disabled:opacity-55";
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:

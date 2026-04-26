@@ -65,15 +65,15 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
       )}
 
       <div className="p-4 sm:p-6 flex flex-col flex-grow">
-        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-          <div className="flex items-center gap-2 text-[var(--text-soft)] text-xs sm:text-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--text-soft)] sm:text-sm">
             <Calendar size={14} className="flex-shrink-0" />
-            <time dateTime={post.published_at} className="whitespace-nowrap">
+            <time dateTime={post.published_at}>
               {formatLocalizedDate(post.published_at, locale)}
             </time>
           </div>
           {post.category && (
-            <Badge variant="primary" className="whitespace-nowrap">{getCategoryLabel(post.category, locale)}</Badge>
+            <Badge variant="primary">{getCategoryLabel(post.category, locale)}</Badge>
           )}
         </div>
 
@@ -104,20 +104,20 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-4 border-t border-[var(--line)] gap-2">
-          <div className="flex items-center gap-3 text-xs text-[var(--text-soft)]">
+        <div className="flex flex-col items-start gap-3 border-t border-[var(--line)] pt-4 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-soft)]">
             <div className="flex items-center gap-1">
               <Clock size={14} className="flex-shrink-0" />
-              <span className="whitespace-nowrap">{formatLocalizedReadingTime(readingTime, locale)}</span>
+              <span>{formatLocalizedReadingTime(readingTime, locale)}</span>
             </div>
             <div className="flex items-center gap-1">
               <Eye size={14} className="flex-shrink-0" />
-              <span className="whitespace-nowrap">{post.view_count} {copy.views}</span>
+              <span>{post.view_count} {copy.views}</span>
             </div>
           </div>
           <Link
             href={localizedPath(`/blog/${post.slug}`, locale)}
-            className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[var(--amber)] transition-colors font-medium text-sm group/link whitespace-nowrap"
+            className="group/link inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--amber)]"
           >
             {copy.readMore}
             <ArrowRight size={16} className="group-hover/link:translate-x-1 transition-transform flex-shrink-0" />

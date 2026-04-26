@@ -25,6 +25,27 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   ...generateHomeMetadata(),
   metadataBase: new URL(siteConfig.url),
+  icons: {
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
+      {
+        url: "/images/favicon-32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [
+      {
+        url: "/images/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -48,7 +69,7 @@ export default async function RootLayout({
   const initialLocale = isLocale(headerLocale) ? headerLocale : defaultLocale;
 
   return (
-    <html lang={initialLocale} suppressHydrationWarning>
+    <html lang={initialLocale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning

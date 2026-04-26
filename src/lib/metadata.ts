@@ -25,13 +25,13 @@ const pageCopy: Record<PageKey, Record<Locale, { title: string; description: str
     vi: {
       title: SITE_NAME,
       description:
-        'ShadowDev là portfolio kỹ thuật và blog chia sẻ kiến thức về DevOps, Docker, network, kiến trúc web, Git, bảo mật, Laravel, Next.js và hệ thống production.',
+        'ShadowDev là technical engineering journal chia sẻ kiến thức về DevOps, Docker, network, kiến trúc web, Git, bảo mật, Next.js và hệ thống production.',
       path: '/',
     },
     en: {
       title: SITE_NAME,
       description:
-        'ShadowDev is a technical portfolio and engineering journal about DevOps, Docker, networking, web architecture, Git, security, Laravel, Next.js, and production systems.',
+        'ShadowDev is a technical engineering journal about DevOps, Docker, networking, web architecture, Git, security, Next.js, and production systems.',
       path: '/',
     },
   },
@@ -89,13 +89,13 @@ const pageCopy: Record<PageKey, Record<Locale, { title: string; description: str
     vi: {
       title: 'Dự án',
       description:
-        'Case study về Laravel, LMS, CMS, CRM, chatbot giáo dục, Vue.js, Next.js, admin UX, bảo mật API, SEO và hiệu năng.',
+        'Case map ShadowDev về architecture, API security, DevOps, Docker, observability, database reliability, technical SEO và performance.',
       path: '/projects',
     },
     en: {
       title: 'Projects',
       description:
-        'ShadowDev case studies covering Laravel, LMS, CMS, CRM, education chatbots, Vue.js, Next.js, admin UX, API security, SEO, and performance.',
+        'ShadowDev case map covering architecture, API security, DevOps, Docker, observability, database reliability, technical SEO, and performance.',
       path: '/projects',
     },
   },
@@ -103,13 +103,13 @@ const pageCopy: Record<PageKey, Record<Locale, { title: string; description: str
     vi: {
       title: 'Hồ sơ',
       description:
-        'Hồ sơ phỏng vấn tập trung vào PHP, Laravel, LMS, CMS, CRM, chatbot giáo dục, Vue.js, Next.js, UX và API an toàn.',
+        'Hồ sơ kỹ thuật 5-6 năm về full-stack engineering, architecture, API security, DevOps, frontend performance, SEO và production systems.',
       path: '/resume',
     },
     en: {
       title: 'Resume',
       description:
-        'A focused interview profile for PHP, Laravel, LMS, CMS, CRM, education chatbots, Vue.js, Next.js, UX, and secure APIs.',
+        'A 5-6 year technical profile for full-stack engineering, architecture, API security, DevOps, frontend performance, SEO, and production systems.',
       path: '/resume',
     },
   },

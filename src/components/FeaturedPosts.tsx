@@ -28,8 +28,8 @@ export default function FeaturedPosts({ posts = [] as Post[] }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-      <Link href={localizedPath(`/blog/${first.slug}`, locale)} className="group surface-card relative lg:col-span-2 overflow-hidden">
-        <div className="relative h-80 sm:h-[24rem]">
+      <Link href={localizedPath(`/blog/${first.slug}`, locale)} className="group surface-card relative overflow-hidden lg:col-span-2">
+        <div className="relative h-64 sm:h-[22rem]">
           {first.featured_image && (
             <Image
               src={first.featured_image}
@@ -43,15 +43,15 @@ export default function FeaturedPosts({ posts = [] as Post[] }) {
           <div className="absolute inset-0 bg-gradient-to-t from-[#111711] via-[#111711]/45 to-transparent" />
         </div>
         <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="text-xs sm:text-sm text-[var(--text-muted)] flex items-center gap-2">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-muted)] sm:text-sm">
               <time dateTime={first.published_at}>{formatLocalizedDate(first.published_at, locale)}</time>
               <span className="opacity-50">•</span>
               <span>{formatLocalizedReadingTime(firstReading, locale)}</span>
             </div>
             {first.category && <Badge variant="primary" className="text-xs">{getCategoryLabel(first.category, locale)}</Badge>}
           </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold leading-tight mb-2 text-[var(--text)]">
+          <h3 className="mb-2 text-xl font-extrabold leading-tight text-[var(--text)] sm:text-3xl">
             {localizedFirst.title}
           </h3>
           <p className="hidden sm:block text-[var(--text-muted)] line-clamp-2">{localizedFirst.excerpt}</p>
@@ -68,7 +68,7 @@ export default function FeaturedPosts({ posts = [] as Post[] }) {
               href={localizedPath(`/blog/${p.slug}`, locale)}
               className="group surface-card relative overflow-hidden"
             >
-              <div className="relative h-40 sm:h-48">
+              <div className="relative h-36 sm:h-48">
                 {p.featured_image && (
                   <Image
                     src={p.featured_image}
@@ -81,12 +81,12 @@ export default function FeaturedPosts({ posts = [] as Post[] }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#111711] via-[#111711]/45 to-transparent" />
               </div>
               <div className="absolute inset-x-0 bottom-0 p-4">
-                <div className="text-[11px] text-[var(--text-muted)] mb-1 flex items-center gap-2">
+                <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--text-muted)]">
                   <time dateTime={p.published_at}>{formatLocalizedDate(p.published_at, locale)}</time>
                   <span className="opacity-50">•</span>
                   <span>{formatLocalizedReadingTime(rt, locale)}</span>
                 </div>
-                <h4 className="text-[var(--text)] font-bold text-lg line-clamp-2">{localizedPost.title}</h4>
+                <h4 className="line-clamp-2 text-base font-bold text-[var(--text)] sm:text-lg">{localizedPost.title}</h4>
               </div>
             </Link>
           );

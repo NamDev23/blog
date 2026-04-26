@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -108,6 +108,7 @@ const opsCards = [
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const activePanelTopRef = useRef<HTMLDivElement | null>(null);
   const [activeView, setActiveView] = useState<AdminView>('posts');
   const [summary, setSummary] = useState<SummaryState>({
     totalPosts: 0,
@@ -340,6 +341,12 @@ export default function AdminDashboard() {
     if (activeView === 'inbox') await loadMessages(messagesPagination.page);
   }
 
+  function scrollActivePanelTop() {
+    window.requestAnimationFrame(() => {
+      activePanelTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   async function updateCommentApproval(commentId: string, approved: boolean) {
     setActionId(`comment:${commentId}`);
     setCommentsError('');
@@ -511,6 +518,7 @@ export default function AdminDashboard() {
           </aside>
 
           <main className="min-w-0">
+            <div ref={activePanelTopRef} className="scroll-mt-24" />
             {activeView === 'overview' && renderOverview()}
             {activeView === 'posts' && renderPosts()}
             {activeView === 'comments' && renderComments()}
@@ -666,7 +674,10 @@ export default function AdminDashboard() {
             <PaginationControls
               pagination={postsPagination}
               loading={postsLoading}
-              onPageChange={(page) => setPostsPagination((current) => ({ ...current, page }))}
+              onPageChange={(page) => {
+                setPostsPagination((current) => ({ ...current, page }));
+                scrollActivePanelTop();
+              }}
             />
           </>
         )}
@@ -758,7 +769,10 @@ export default function AdminDashboard() {
             <PaginationControls
               pagination={commentsPagination}
               loading={commentsLoading}
-              onPageChange={(page) => setCommentsPagination((current) => ({ ...current, page }))}
+              onPageChange={(page) => {
+                setCommentsPagination((current) => ({ ...current, page }));
+                scrollActivePanelTop();
+              }}
             />
           </>
         )}
@@ -872,7 +886,10 @@ export default function AdminDashboard() {
             <PaginationControls
               pagination={messagesPagination}
               loading={messagesLoading}
-              onPageChange={(page) => setMessagesPagination((current) => ({ ...current, page }))}
+              onPageChange={(page) => {
+                setMessagesPagination((current) => ({ ...current, page }));
+                scrollActivePanelTop();
+              }}
             />
           </>
         )}

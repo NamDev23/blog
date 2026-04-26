@@ -1,9 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, KeyRound, Loader2, LockKeyhole, ShieldCheck, Terminal } from 'lucide-react';
+import { AlertCircle, CheckCircle2, KeyRound, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Section from '@/components/ui/Section';
@@ -98,7 +99,14 @@ export default function AdminLoginPage() {
               <h2 className="text-2xl font-semibold text-[var(--text)]">{siteConfig.name} Admin</h2>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-[rgba(102,217,194,0.3)] bg-[rgba(102,217,194,0.1)]">
-              <Terminal size={21} className="text-[var(--accent)]" />
+              <Image
+                src="/images/icon-192.png"
+                alt=""
+                width={28}
+                height={28}
+                unoptimized
+                className="h-7 w-7 object-contain"
+              />
             </div>
           </div>
 

@@ -23,17 +23,17 @@ export default function ContactPage() {
   const copy = locale === 'vi'
     ? {
         title: 'Liên hệ',
-        description: 'Gửi vấn đề về sản phẩm, hiệu năng, UX hoặc bảo mật. ShadowDev sẽ giữ brief thật thực tế.',
+        description: 'Gửi thông tin về kiến trúc web, bảo mật API, DevOps, hiệu năng, quy trình quản trị hoặc nội dung kỹ thuật.',
         sendFailed: 'Không gửi được tin nhắn.',
         email: 'Email',
         phone: 'Điện thoại',
         location: 'Địa điểm',
-        briefType: 'Loại brief',
-        briefTitle: 'Laravel, hệ thống giáo dục, CMS/CRM, chatbot hoặc frontend UI.',
+        briefType: 'Nội dung trao đổi',
+        briefTitle: 'Kiến trúc, bảo mật, DevOps, hiệu năng hoặc hệ thống nội dung.',
         briefDescription:
-          'Gửi brief ngắn gọn: mục tiêu sản phẩm, stack hiện tại, workflow người dùng, yêu cầu admin và quyết định tiếp theo bạn cần đưa ra.',
+          'Hãy gửi ngắn gọn mục tiêu sản phẩm, stack hiện tại, điểm đang nghẽn, rủi ro bảo mật/vận hành và quyết định tiếp theo bạn cần đưa ra.',
         bestTopics: 'Chủ đề phù hợp để trao đổi',
-        topics: ['Kiến trúc LMS/CMS/CRM', 'Laravel API và workflow admin', 'Thiết kế lại UI Vue hoặc Next.js', 'Tự động hóa chatbot giáo dục'],
+        topics: ['Rà soát kiến trúc và ranh giới API', 'Bảo mật form, bình luận, quản trị và API công khai', 'Docker, CI/CD, rollback và giám sát hệ thống', 'Hiệu năng, SEO kỹ thuật và nội dung song ngữ'],
         success: 'Đã nhận tin nhắn. Tôi sẽ phản hồi qua email.',
         name: 'Tên',
         subject: 'Chủ đề',
@@ -52,17 +52,17 @@ export default function ContactPage() {
       }
     : {
         title: 'Get In Touch',
-        description: 'Bring a product, performance, UX, or security problem. ShadowDev will keep the brief practical.',
+        description: 'Send a brief about web architecture, API security, DevOps, performance, admin workflow, or technical content.',
         sendFailed: 'Message could not be sent.',
         email: 'Email',
         phone: 'Phone',
         location: 'Location',
         briefType: 'Brief Type',
-        briefTitle: 'Laravel, education systems, CMS/CRM, chatbot, or frontend UI.',
+        briefTitle: 'Architecture, security, DevOps, performance, or content systems.',
         briefDescription:
-          'Send a practical brief: product goal, current stack, user workflow, admin requirement, and the next decision you need to make.',
+          'Send a practical brief: product goal, current stack, current bottleneck, security/operational risk, and the next decision you need to make.',
         bestTopics: 'Best topics to discuss',
-        topics: ['LMS/CMS/CRM architecture', 'Laravel API and admin workflow', 'Vue or Next.js UI redesign', 'Education chatbot automation'],
+        topics: ['Architecture review and API boundaries', 'Form, comment, admin, and public API security', 'Docker, CI/CD, rollback, and observability', 'Performance, technical SEO, and bilingual content'],
         success: "Message received. I'll reply by email.",
         name: 'Name',
         subject: 'Subject',
@@ -252,7 +252,7 @@ export default function ContactPage() {
                 <ul className="mt-3 space-y-2 text-sm text-[var(--text-muted)]">
                   {copy.topics.map((item) => (
                     <li key={item} className="flex gap-2">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[var(--amber)]" />
+                      <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--amber)]" />
                       {item}
                     </li>
                   ))}
@@ -268,7 +268,7 @@ export default function ContactPage() {
               transition={{ duration: 0.6 }}
               className="min-w-0"
             >
-              <form onSubmit={handleSubmit} className="surface-card p-6 sm:p-8">
+              <form onSubmit={handleSubmit} className="surface-card p-5 sm:p-8">
                 {submitted && (
                   <div className="mb-5 flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
                     <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />

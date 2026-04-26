@@ -182,14 +182,14 @@ $$ LANGUAGE plpgsql;
 
 -- Function ghi audit view và tăng view_count dạng atomic cho bài đã publish.
 CREATE OR REPLACE FUNCTION public.track_post_view(
-  post_slug TEXT,
-  visitor_hash TEXT,
-  ip_hash TEXT,
-  user_agent_hash TEXT,
-  view_bucket TIMESTAMP WITH TIME ZONE,
-  referrer TEXT DEFAULT NULL,
-  locale TEXT DEFAULT NULL,
-  path TEXT DEFAULT NULL
+  p_post_slug TEXT,
+  p_visitor_hash TEXT,
+  p_ip_hash TEXT,
+  p_user_agent_hash TEXT,
+  p_view_bucket TIMESTAMP WITH TIME ZONE,
+  p_referrer TEXT DEFAULT NULL,
+  p_locale TEXT DEFAULT NULL,
+  p_path TEXT DEFAULT NULL
 )
 RETURNS TABLE(view_count INTEGER, counted BOOLEAN) AS $$
 DECLARE
@@ -199,7 +199,7 @@ DECLARE
 BEGIN
   SELECT id INTO target_post_id
   FROM public.posts
-  WHERE slug = post_slug
+  WHERE slug = p_post_slug
     AND published_at IS NOT NULL
     AND published_at <= NOW();
 
@@ -221,13 +221,13 @@ BEGIN
   )
   VALUES (
     target_post_id,
-    visitor_hash,
-    ip_hash,
-    user_agent_hash,
-    view_bucket,
-    NULLIF(LEFT(referrer, 500), ''),
-    NULLIF(LEFT(locale, 8), ''),
-    NULLIF(LEFT(path, 500), ''),
+    p_visitor_hash,
+    p_ip_hash,
+    p_user_agent_hash,
+    p_view_bucket,
+    NULLIF(LEFT(p_referrer, 500), ''),
+    NULLIF(LEFT(p_locale, 8), ''),
+    NULLIF(LEFT(p_path, 500), ''),
     true
   )
   ON CONFLICT (post_id, visitor_hash, view_bucket) DO NOTHING;

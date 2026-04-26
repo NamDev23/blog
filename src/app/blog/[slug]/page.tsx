@@ -347,7 +347,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="relative h-56 overflow-hidden bg-[#090d0b] sm:h-72 md:h-[28rem]"
+        className="relative h-48 overflow-hidden bg-[#090d0b] sm:h-72 md:h-[28rem]"
       >
         <ArticleHeroImage src={displayPost.featured_image} title={displayPost.title} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d120f] via-[#0d120f]/38 to-transparent"></div>
@@ -381,7 +381,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Badge variant="primary">{getCategoryLabel(displayPost.category, locale)}</Badge>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 sm:mb-8 gradient-text">
+          <h1 className="mb-5 text-2xl font-bold leading-tight sm:mb-8 sm:text-4xl md:text-5xl gradient-text">
             {displayPost.title}
           </h1>
           <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-[var(--text-muted)] text-xs sm:text-sm">
@@ -413,7 +413,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className="flex flex-wrap gap-2 mb-8 pb-8 border-b border-[var(--line)]"
+          className="mb-6 flex flex-wrap gap-2 border-b border-[var(--line)] pb-6 sm:mb-8 sm:pb-8"
         >
           {displayPost.tags.map((tag) => (
             <motion.div key={tag} whileHover={{ scale: 1.05 }}>
@@ -428,7 +428,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="surface-card p-4 sm:p-5 mb-8 sm:mb-10 lg:hidden"
+            className="surface-card mb-6 p-3 sm:mb-10 sm:p-5 lg:hidden"
           >
             <div className="micro-label mb-3">{copy.onThisPage}</div>
             <nav aria-label={copy.onThisPage}>
@@ -450,13 +450,13 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
         )}
 
         {/* Layout: Content + TOC (desktop sticky) */}
-        <div className="grid lg:grid-cols-[1fr_280px] gap-8">
-          <div ref={contentRef}>
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div ref={contentRef} className="min-w-0">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="prose max-w-none mb-12 text-sm sm:text-base"
+              className="prose mb-8 max-w-none min-w-0 text-sm sm:mb-12 sm:text-base"
               dangerouslySetInnerHTML={{ __html: articleContent.html }}
             />
           </div>
@@ -489,14 +489,14 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="border-t border-[var(--line)] pt-8"
+          className="border-t border-[var(--line)] pt-6 sm:pt-8"
         >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-1 sm:mb-2">
+          <div className="flex items-center justify-between gap-3 sm:gap-6">
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1 text-sm font-semibold text-[var(--text)] sm:mb-2 sm:text-lg">
                 {copy.shareArticle}
               </h3>
-              <p className="text-[var(--text-muted)] text-xs sm:text-sm">
+              <p className="line-clamp-2 text-xs text-[var(--text-muted)] sm:text-sm">
                 {copy.shareHelp}
               </p>
             </div>
@@ -505,9 +505,9 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
               whileTap={{ scale: 0.95 }}
               onClick={handleShare}
               aria-label={copy.shareArticle}
-              className="w-10 h-10 rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.06)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all flex-shrink-0"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.06)] text-[var(--text-muted)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent)] sm:h-10 sm:w-10"
             >
-              <Share2 size={20} />
+              <Share2 size={18} />
             </motion.button>
           </div>
         </motion.div>
@@ -521,9 +521,9 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="mt-12 sm:mt-16 pt-12 sm:pt-16 border-t border-[var(--line)]"
+            className="mt-8 border-t border-[var(--line)] pt-8 sm:mt-12 sm:pt-12"
           >
-            <h3 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-10 gradient-text">
+            <h3 className="mb-5 text-xl font-bold sm:mb-8 sm:text-2xl gradient-text">
               {copy.relatedArticles}
             </h3>
 
@@ -533,7 +533,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
                 <p className="text-[var(--text-muted)] text-sm">{copy.loadingRelated}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2">
                 {localizedRelatedPosts.map((relatedPost) => (
                   <motion.div
                     key={relatedPost.id}
@@ -541,14 +541,14 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
                   >
                     <Link
                       href={localizedPath(`/blog/${relatedPost.slug}`, locale)}
-                      className="surface-card p-6 transition-all group hover:-translate-y-1 hover:border-[rgba(102,217,194,0.45)] block h-full"
+                      className="surface-card group block h-full p-4 transition-all hover:-translate-y-1 hover:border-[rgba(102,217,194,0.45)] sm:p-5"
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <Badge variant="primary" className="text-xs">
                           {getCategoryLabel(relatedPost.category, locale)}
                         </Badge>
                       </div>
-                      <h4 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-2 group-hover:text-[var(--accent)] transition-all line-clamp-2">
+                      <h4 className="mb-2 line-clamp-2 text-sm font-semibold text-[var(--text)] transition-all group-hover:text-[var(--accent)] sm:text-base">
                         {relatedPost.title}
                       </h4>
                       <p className="text-[var(--text-muted)] text-xs sm:text-sm mb-4 line-clamp-2">

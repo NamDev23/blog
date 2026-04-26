@@ -27,7 +27,7 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
     <span
       className={twMerge(
         clsx(
-          "inline-flex items-center px-3 py-1 rounded-md text-xs font-medium",
+          "inline-flex max-w-full min-w-0 items-center rounded-md px-3 py-1 text-left text-xs font-medium break-words",
           variants[variant],
           className
         )

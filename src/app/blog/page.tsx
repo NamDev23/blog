@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import PostCard from '@/components/PostCard';
 import { motion } from 'framer-motion';
 import { Search, Loader2, AlertCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -52,7 +52,7 @@ export default function BlogPage() {
   const copy = locale === 'vi'
     ? {
         title: 'Bài viết',
-        description: 'Đọc ghi chú về DevOps, Docker, networking, kiến trúc, Git, bảo mật, hiệu năng và sản phẩm web.',
+        description: 'Đọc các bài viết về DevOps, Docker, mạng máy tính, kiến trúc hệ thống, Git, bảo mật, hiệu năng và sản phẩm web.',
         searchPlaceholder: 'Tìm bài viết...',
         searchAria: 'Tìm bài viết',
         clearSearch: 'Xóa tìm kiếm',
@@ -60,9 +60,9 @@ export default function BlogPage() {
         found: (count: number) => `Tìm thấy ${count} bài viết`,
         all: 'Tất cả',
         loadingCategories: 'Đang tải danh mục...',
-        archiveEyebrow: 'Kho bài',
+        archiveEyebrow: 'Kho kiến thức',
         archiveTitle: 'Tất cả bài viết',
-        archiveDescription: 'Lọc theo chủ đề, tìm theo vấn đề và đọc theo nhu cầu.',
+        archiveDescription: 'Lọc theo chủ đề, tìm đúng vấn đề bạn đang gặp và đọc theo mạch cần thiết.',
         failed: 'Không tải được bài viết',
         loading: 'Đang tải bài viết...',
         empty: 'Không tìm thấy bài viết. Hãy thử đổi từ khóa hoặc bộ lọc.',
@@ -95,6 +95,7 @@ export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const archiveTopRef = useRef<HTMLDivElement | null>(null);
 
   // Debounce search query để tránh lọc lại quá nhiều khi người dùng đang gõ.
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -140,6 +141,18 @@ export default function BlogPage() {
     (safeCurrentPage - 1) * POSTS_PER_PAGE,
     safeCurrentPage * POSTS_PER_PAGE
   );
+
+  function scrollToArchiveTop() {
+    window.requestAnimationFrame(() => {
+      archiveTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function changePage(nextPage: number) {
+    const clampedPage = Math.min(Math.max(nextPage, 1), pageCount);
+    setCurrentPage(clampedPage);
+    scrollToArchiveTop();
+  }
 
   return (
     <>
@@ -215,7 +228,7 @@ export default function BlogPage() {
             variant={selectedCategory === null ? 'secondary' : 'outline'}
             size="sm"
             shape="pill"
-            className={`whitespace-nowrap ${selectedCategory === null ? 'ring-1 ring-[rgba(102,217,194,0.4)]' : ''}`}
+            className={selectedCategory === null ? 'ring-1 ring-[rgba(102,217,194,0.4)]' : ''}
           >
             {copy.all}
           </Button>
@@ -236,7 +249,7 @@ export default function BlogPage() {
                 variant={selectedCategory === category ? 'secondary' : 'outline'}
                 size="sm"
                 shape="pill"
-                className={`whitespace-nowrap ${selectedCategory === category ? 'ring-1 ring-[rgba(102,217,194,0.4)]' : ''}`}
+                className={selectedCategory === category ? 'ring-1 ring-[rgba(102,217,194,0.4)]' : ''}
               >
                 {getCategoryLabel(category, locale)}
               </Button>
@@ -247,6 +260,7 @@ export default function BlogPage() {
 
       {/* Posts Grid */}
       <Section>
+        <div ref={archiveTopRef} className="scroll-mt-24" />
         <SectionHeader
           eyebrow={copy.archiveEyebrow}
           title={copy.archiveTitle}
@@ -307,14 +321,14 @@ export default function BlogPage() {
             {pageCount > 1 && (
               <nav
                 aria-label="Blog pagination"
-                className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-between gap-4"
+                className="mt-8 flex flex-col items-center justify-between gap-4 sm:mt-10 sm:flex-row"
               >
-                <p className="text-sm text-[var(--text-soft)]">
+                <p className="text-center text-sm text-[var(--text-soft)] sm:text-left">
                   {copy.pageSummary(safeCurrentPage, pageCount, filteredPosts.length)}
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button
-                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    onClick={() => changePage(safeCurrentPage - 1)}
                     disabled={safeCurrentPage === 1}
                     variant="outline"
                     size="sm"
@@ -329,19 +343,19 @@ export default function BlogPage() {
                     return (
                       <Button
                         key={pageNumber}
-                        onClick={() => setCurrentPage(pageNumber)}
+                        onClick={() => changePage(pageNumber)}
                         variant={isActive ? 'secondary' : 'ghost'}
                         size="sm"
                         aria-label={`${copy.page} ${pageNumber}`}
                         aria-current={isActive ? 'page' : undefined}
-                        className="min-w-10 px-3"
+                        className="min-w-9 px-3 sm:min-w-10"
                       >
                         {pageNumber}
                       </Button>
                     );
                   })}
                   <Button
-                    onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
+                    onClick={() => changePage(safeCurrentPage + 1)}
                     disabled={safeCurrentPage === pageCount}
                     variant="outline"
                     size="sm"

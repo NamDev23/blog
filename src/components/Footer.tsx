@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Github, Linkedin, Twitter, Mail, ArrowRight, Terminal } from 'lucide-react';
+import { Github, Linkedin, Twitter, Mail, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { exploreLinks } from '@/lib/navigation';
 import { siteConfig } from '@/lib/site';
@@ -89,7 +90,14 @@ export default function Footer() {
           <motion.div variants={itemVariants}>
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[rgba(244,241,232,0.06)]">
-                <Terminal size={18} className="text-[var(--accent)]" />
+                <Image
+                  src="/images/icon-192.png"
+                  alt=""
+                  width={24}
+                  height={24}
+                  unoptimized
+                  className="h-6 w-6 object-contain"
+                />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-[var(--text)]">{siteConfig.name}</h3>
             </div>

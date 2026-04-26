@@ -1005,6 +1005,177 @@ pg_restore --clean --if-exists --dbname="$RESTORE_DATABASE_URL" app.dump
       </ul>
     `,
   },
+  'shadowdev-blueprint-technical-blog-product-system': {
+    title: 'ShadowDev Blueprint: building a technical blog as a product system',
+    excerpt: 'A blueprint for building a technical blog as a product system: content model, bilingual workflow, SEO, admin security, pagination, and honest view tracking.',
+    seo_title: 'ShadowDev Blueprint: technical blog as product system',
+    seo_description: 'Build a professional technical blog with content modeling, bilingual publishing, SEO, admin security, pagination, and real view tracking.',
+    content: `
+      <h2>A technical blog is not just a place to publish posts</h2>
+      <p>A professional technical blog should be designed as a product system: content modeling, authoring workflow, draft/published states, SEO metadata, preview cards, admin security, and measurement. Static posts can work at first, but they become hard to scale when posts, authors, comments, and languages grow.</p>
+      <p>ShadowDev should be understood as a small knowledge platform. Each article answers an engineering question while also proving how the system owner thinks about architecture, security, performance, and operations.</p>
+
+      <h2>Start content modeling from the domain</h2>
+      <p>A post needs more than title and content. Production-ready content usually needs a stable slug, excerpt, featured image, category, tags, SEO title, SEO description, canonical URL, noindex state, published date, updated date, view count, and locale translations.</p>
+      <pre><code class="language-ts">type Post = {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  publishedAt: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  translations?: PostTranslation[];
+};</code></pre>
+      <p>The important distinction is canonical data versus locale display data. Slugs can stay shared for stable canonical/hreflang behavior, while title, excerpt, content, and SEO metadata are localized.</p>
+
+      <h2>Bilingual workflow needs explicit states</h2>
+      <p>For Vietnamese and English sites, a professional approach should not force admins to write both versions manually every time. The system can generate translations automatically, but humans should review them before publishing. Useful states include original draft, generated translation, reviewed translation, and published.</p>
+      <ul>
+        <li><strong>Draft:</strong> content is being written and is not public.</li>
+        <li><strong>Generated:</strong> machine translation exists and needs terminology review.</li>
+        <li><strong>Reviewed:</strong> title, excerpt, headings, code blocks, and SEO were checked.</li>
+        <li><strong>Published:</strong> public routes, RSS, and sitemap can use it.</li>
+      </ul>
+
+      <h2>SEO should be assisted in the editor</h2>
+      <p>SEO is not keyword stuffing. The editor should guide title length, description length, slug quality, heading hierarchy, internal links, and focus keywords. A strong technical article has one H1 on the page, clear H2s, a 120-160 character meta description, readable URLs, a relevant Open Graph image, and internal links to related work.</p>
+      <p>For technical writing, SEO quality also comes from correctness: code examples, explicit limits, reusable checklists, and primary references when discussing standards or technology behavior.</p>
+
+      <h2>Admin security is part of the content product</h2>
+      <p>The CMS admin can write to public content, so it must be treated as a sensitive surface. Do not store admin keys in localStorage, do not trust hidden UI controls, do not expose service role keys to the browser, and do not let drafts leak through public APIs. Write endpoints should verify server-side sessions, validate payloads, sanitize HTML, and rate limit sensitive actions.</p>
+
+      <h2>Measurement should be honest</h2>
+      <p>View counts should come from real read events, not fake numbers. A practical approach is to record a view when a user opens an article, debounce by post plus anonymous visitor plus time window, and update counts through an API or RPC. At larger scale, move to event tables or analytics pipelines instead of writing directly to posts on every hit.</p>
+
+      <h2>Blueprint checklist</h2>
+      <ul>
+        <li>Post model includes content, SEO, publish state, and translations.</li>
+        <li>Editor has public card preview and article preview.</li>
+        <li>Generated translations require review before publishing.</li>
+        <li>Public APIs do not return drafts, comment emails, or admin-only fields.</li>
+        <li>Admin writes use server-side auth, validation, sanitization, and rate limits.</li>
+        <li>Blog lists, admin posts, comments, and messages all use pagination.</li>
+        <li>Views are real and have simple duplicate protection.</li>
+      </ul>
+
+      <h2>Primary references</h2>
+      <ul>
+        <li><a href="https://nextjs.org/docs/app/building-your-application/optimizing/metadata">Next.js Docs: Metadata</a></li>
+        <li><a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide">Google Search Central: SEO Starter Guide</a></li>
+        <li><a href="https://supabase.com/docs/guides/database/postgres/row-level-security">Supabase Docs: Row Level Security</a></li>
+      </ul>
+    `,
+  },
+  'api-security-baseline-nextjs-form-comment-admin-route': {
+    title: 'API Security Baseline for Next.js: forms, comments, and admin routes',
+    excerpt: 'A Next.js API security baseline for forms, comments, and admin routes: server validation, authorization, CSRF/Origin checks, SameSite cookies, rate limits, HTML sanitization, and audit logs.',
+    seo_title: 'API Security Baseline for Next.js',
+    seo_description: 'Secure Next.js APIs for forms, comments, and admin routes with validation, authz, CSRF checks, rate limits, and audit logs.',
+    content: `
+      <h2>Security baselines start with a threat model</h2>
+      <p>A Next.js application with a contact form, comments, and an admin CMS has several attack surfaces: spam, brute force, CSRF, XSS, IDOR/BOLA, draft leaks, email exposure, write API abuse, and vulnerable dependencies. If validation only happens in the frontend, attackers can bypass the UI and call APIs directly.</p>
+      <p>A good baseline is the set of defenses that match the current product while leaving a clear path to stronger controls as traffic and sensitive data grow.</p>
+
+      <h2>Validate and normalize input on the server</h2>
+      <p>Client validation improves UX, but server validation is the real boundary. Public forms should trim strings, enforce length limits, validate email, reject unknown fields, and return stable error codes that the UI can localize.</p>
+      <pre><code class="language-ts">const payload = {
+  name: cleanText(body.name, 80),
+  email: normalizeEmail(body.email),
+  subject: cleanText(body.subject, 120),
+  message: cleanText(body.message, 3000),
+};</code></pre>
+      <p>If the API accepts HTML from a CMS, sanitize it with an allowlist of tags and attributes. Never render user-provided HTML with <code>dangerouslySetInnerHTML</code> unless the source and sanitization path are controlled.</p>
+
+      <h2>Authentication is not authorization</h2>
+      <p>Admin routes need authentication, but every action still needs permission checks. A user who can read comments may not be allowed to delete them; a user who can edit drafts may not be allowed to publish. Even for a small one-key admin system, central guards make future multi-user roles easier.</p>
+      <p>Public routes should not return admin-only fields. Public comments do not need author emails, contact messages do not need public reads, and draft posts must not appear in blog lists.</p>
+
+      <h2>CSRF, Origin, and SameSite cookies</h2>
+      <p>If admin uses cookies, write requests need CSRF defenses. SameSite cookies reduce risk, while Origin or Sec-Fetch-Site checks are useful for API mutations. High-risk actions can add a dedicated CSRF token.</p>
+
+      <h2>Rate limit by surface</h2>
+      <p>Not every route needs the same limit. Login should be strict by IP and identifier. Contact and comments should limit by IP, user agent, or a lightweight fingerprint. Search can usually be looser. Multi-instance deployments should use Redis or a database-backed counter instead of in-memory limits.</p>
+
+      <h2>Logging and audit trails</h2>
+      <p>Security is not only prevention. You need to know which requests were blocked, which route is being spammed, which admin changed a post, and what kind of payload failed. Logs must not contain secrets, passwords, tokens, or unnecessary sensitive data.</p>
+
+      <h2>Next.js API baseline checklist</h2>
+      <ul>
+        <li>Server validation exists for every API.</li>
+        <li>Admin keys and sessions are handled server-side and not stored in localStorage.</li>
+        <li>Write routes have auth, authorization, Origin checks, and rate limits.</li>
+        <li>CMS HTML is sanitized before storage or rendering.</li>
+        <li>Public responses omit sensitive fields and never return drafts.</li>
+        <li>Security headers include CSP, nosniff, frame policy, and referrer policy.</li>
+        <li>Dependencies are audited and secrets have a rotation process.</li>
+      </ul>
+
+      <h2>Primary references</h2>
+      <ul>
+        <li><a href="https://owasp.org/API-Security/editions/2023/en/0x00-header/">OWASP API Security Top 10 2023</a></li>
+        <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html">OWASP Input Validation Cheat Sheet</a></li>
+        <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html">OWASP Node.js Security Cheat Sheet</a></li>
+      </ul>
+    `,
+  },
+  'observability-web-app-log-metric-trace-incident-review': {
+    title: 'Observability for small web apps: logs, metrics, traces, and incident review',
+    excerpt: 'A practical observability guide for small web apps covering structured logs, user-impact metrics, tracing, incident reviews, and production checklists.',
+    seo_title: 'Observability for small web apps',
+    seo_description: 'Apply logs, metrics, traces, Web Vitals, and incident reviews to small production web apps without overengineering.',
+    content: `
+      <h2>Observability is not only for large systems</h2>
+      <p>Small teams often skip observability because they associate it with microservices or Kubernetes. In reality, blogs, CMS products, internal CRMs, and small SaaS apps all need to know where failures happen, how users are affected, and which deploy may be related. Without data, incidents become guesswork.</p>
+      <p>Practical observability starts with three questions: what happened, whether the system is healthy, and where a request spent time. Those questions map to logs, metrics, and traces.</p>
+
+      <h2>Logs should be structured</h2>
+      <p>Free-text logs are hard to query when failures spike. Structured logs should include timestamp, level, message, route, method, status, duration, request ID, and user/admin ID when appropriate. Do not log secrets, tokens, passwords, or sensitive form content.</p>
+      <pre><code class="language-json">{
+  "level": "error",
+  "route": "/api/comments",
+  "status": 429,
+  "duration_ms": 18,
+  "request_id": "req_8f2",
+  "message": "rate_limited"
+}</code></pre>
+
+      <h2>Metrics should track user-visible symptoms</h2>
+      <p>CPU and memory matter, but good alerts prioritize symptoms users experience: error rate, p95/p99 latency, timeouts, login failure spikes, contact form failures, comment submission failures, and page load regressions.</p>
+      <ul>
+        <li><strong>Traffic:</strong> request rate by important route.</li>
+        <li><strong>Error:</strong> 4xx/5xx rates, validation failures, and rate limit counts.</li>
+        <li><strong>Latency:</strong> p50, p95, and p99 for APIs and key database queries.</li>
+        <li><strong>Frontend:</strong> LCP, CLS, INP, JavaScript errors, and API failure rate.</li>
+      </ul>
+
+      <h2>Traces show where requests go</h2>
+      <p>Tracing helps when one request performs several steps: auth, database, external API calls, HTML sanitization, email sending, or event writes. Small systems can start with manual timing logs; more complex systems can adopt OpenTelemetry as a standard instrumentation path.</p>
+
+      <h2>Incident reviews improve the system</h2>
+      <p>The goal of an incident review is not blame. A useful review records timeline, impact, technical cause, why detection was slow, what helped recovery, and concrete action items. “Be more careful” is not an action item.</p>
+
+      <h2>ShadowDev observability checklist</h2>
+      <ul>
+        <li>API logs include route, status, duration, and request ID.</li>
+        <li>Contact/comment failures are counted and visible to admin when needed.</li>
+        <li>View tracking has debounce to avoid excessive duplicate counts.</li>
+        <li>Important admin mutations have audit trails.</li>
+        <li>Frontend pages track Web Vitals and runtime errors.</li>
+        <li>Alerts focus on user impact, not only server resources.</li>
+        <li>Every incident gets a short review and owned action items.</li>
+      </ul>
+
+      <h2>Primary references</h2>
+      <ul>
+        <li><a href="https://opentelemetry.io/docs/what-is-opentelemetry/">OpenTelemetry Docs: What is OpenTelemetry?</a></li>
+        <li><a href="https://sre.google/sre-book/monitoring-distributed-systems/">Google SRE Book: Monitoring Distributed Systems</a></li>
+        <li><a href="https://web.dev/articles/vitals">web.dev: Core Web Vitals</a></li>
+      </ul>
+    `,
+  },
 };
 
 export function localizePost(post: Post, locale: Locale): Post {

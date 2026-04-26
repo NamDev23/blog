@@ -5,12 +5,10 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  Bot,
   BriefcaseBusiness,
   Code2,
   Database,
   Gauge,
-  GraduationCap,
   LayoutDashboard,
   Printer,
   Server,
@@ -26,96 +24,96 @@ import { localizedPath } from '@/lib/locales';
 const strengths = [
   {
     icon: Server,
-    label: 'PHP / Laravel',
-    detail: 'Backend APIs, auth, database modeling, admin workflows, CMS logic, and maintainable business modules.',
+    label: 'Backend & API',
+    detail: 'RESTful APIs, authentication, authorization, validation, database modeling, background jobs, and maintainable service boundaries.',
   },
   {
-    icon: GraduationCap,
-    label: 'Education Systems',
-    detail: 'LMS flows, course structure, learner progress, content operations, and education product thinking.',
+    icon: ShieldCheck,
+    label: 'Security Engineering',
+    detail: 'Secure sessions, API hardening, rate limiting, CSP, input validation, least privilege, and careful public data exposure.',
   },
   {
-    icon: LayoutDashboard,
-    label: 'CMS / CRM',
-    detail: 'Content management, customer/student records, dashboards, filters, roles, and operational screens.',
+    icon: Workflow,
+    label: 'DevOps & Delivery',
+    detail: 'Dockerized runtime, CI/CD validation, environment separation, release discipline, rollback planning, and operational checklists.',
   },
   {
     icon: Code2,
-    label: 'Vue / Next UI',
-    detail: 'Modern frontend interfaces with Vue.js, Next.js, React, TypeScript, Tailwind CSS, and responsive UX.',
+    label: 'Frontend Systems',
+    detail: 'Modern interfaces with Next.js, React, Vue.js, TypeScript, Tailwind CSS, responsive states, accessibility, and performance budgets.',
   },
 ];
 
 const systemExperience = [
   {
-    icon: GraduationCap,
-    title: 'LMS Platforms',
-    detail: 'Course catalogs, lesson pages, enrollment states, progress tracking, assessments, and role-based learning flows.',
+    icon: LayoutDashboard,
+    title: 'Admin-heavy Platforms',
+    detail: 'Dashboards, filters, moderation queues, publishing states, role-based screens, and repeated operational workflows.',
   },
   {
     icon: Database,
-    title: 'CMS Products',
-    detail: 'Post models, categories, tags, publishing states, media fields, admin forms, and SEO-friendly content structure.',
+    title: 'Data Reliability',
+    detail: 'Schema design, migrations, indexes, query review, backup/restore thinking, and safe handling of user-generated data.',
+  },
+  {
+    icon: Gauge,
+    title: 'Performance Engineering',
+    detail: 'Core Web Vitals, caching strategy, image delivery, bundle budgets, loading states, and production monitoring signals.',
   },
   {
     icon: Workflow,
-    title: 'CRM Workflows',
-    detail: 'Lead/student records, status pipelines, search/filter screens, reporting views, and repeated staff operations.',
-  },
-  {
-    icon: Bot,
-    title: 'Education Chatbots',
-    detail: 'Support flows for course questions, lead capture, learning assistance, FAQ automation, and education messaging.',
+    title: 'Automation And Delivery',
+    detail: 'CI/CD pipelines, containerized environments, structured release notes, rollback plans, and incident-ready operating habits.',
   },
 ];
 
 const skillGroups = [
   {
     title: 'Backend',
-    items: ['PHP', 'Laravel', 'REST APIs', 'Auth', 'MySQL', 'PostgreSQL'],
+    items: ['Node.js', 'PHP', 'Laravel', 'REST APIs', 'Auth', 'PostgreSQL'],
   },
   {
     title: 'Frontend',
     items: ['Vue.js', 'Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Responsive UI'],
   },
   {
-    title: 'Product Systems',
-    items: ['LMS', 'CMS', 'CRM', 'Admin dashboards', 'Education workflows', 'Chatbot flows'],
+    title: 'Platform',
+    items: ['Docker', 'CI/CD', 'Linux basics', 'Git workflow', 'Supabase', 'Environment config'],
   },
   {
     title: 'Production',
-    items: ['SEO', 'Security', 'Performance', 'Supabase', 'Content modeling', 'UX writing'],
+    items: ['SEO', 'Security', 'Performance', 'Observability', 'Content modeling', 'UX writing'],
   },
 ];
 
 const proof = [
   {
-    title: 'Education product experience',
-    meta: 'LMS / Chatbot',
-    detail: 'You can discuss real education workflows: learner journeys, content delivery, automation, and support flows.',
+    title: 'Production product thinking',
+    meta: 'Architecture / UX',
+    detail: 'You can discuss product requirements as system boundaries, user workflows, data ownership, latency, and operational risk.',
   },
   {
-    title: 'Business system thinking',
-    meta: 'CMS / CRM',
-    detail: 'You can explain admin screens, data relationships, roles, filters, records, and daily operational use cases.',
+    title: 'Secure-by-default implementation',
+    meta: 'API / Security',
+    detail: 'You can explain why authorization, validation, rate limits, response shaping, and secure cookies belong on the server.',
   },
   {
     title: 'Full-stack implementation',
-    meta: 'Laravel / API / UI',
-    detail: 'You can bridge backend logic and frontend UX instead of treating the interface as a separate layer.',
+    meta: 'API / UI / Data',
+    detail: 'You can connect backend logic, data design, admin workflow, and frontend states instead of treating UI as a separate layer.',
   },
   {
     title: 'ShadowDev as proof',
-    meta: 'Next.js / CMS',
-    detail: 'This project demonstrates protected admin login, blog publishing, SEO, responsive UI, and API hardening.',
+    meta: 'Next.js / CMS / SEO',
+    detail: 'This project demonstrates protected admin login, bilingual publishing, SEO, responsive UI, API hardening, and operational content workflows.',
   },
 ];
 
 const interviewPoints = [
-  'Walk through an LMS feature from database model to learner-facing screen.',
-  'Explain how a CMS or CRM admin interface should support staff doing repeated work.',
-  'Compare Laravel backend responsibilities with Vue.js or Next.js frontend responsibilities.',
-  'Show the ShadowDev admin login, CMS posting flow, protected API routes, and SEO structure.',
+  'Walk through a feature from domain model to API contract, admin workflow, frontend state, and observability signal.',
+  'Explain how you would harden a public form, comment system, or admin write API against common attacks.',
+  'Discuss Docker, CI/CD, environment variables, rollback, logs, metrics, and production readiness for a web app.',
+  'Show the ShadowDev admin login, bilingual CMS publishing flow, protected API routes, SEO structure, and pagination behavior.',
 ];
 
 /**
@@ -130,28 +128,28 @@ export default function ResumePage() {
   const copy = locale === 'vi'
     ? {
         eyebrow: 'Hồ sơ phỏng vấn',
-        title: 'Full-stack developer cho hệ thống giáo dục.',
-        subtitle: 'Sản phẩm CMS/CRM, luồng chatbot và giao diện frontend hiện đại.',
-        badges: ['Backend Laravel', 'Education SaaS', 'UX CMS/CRM', 'UI Vue / Next'],
+        title: 'Kỹ sư full-stack có tư duy sản phẩm và vận hành.',
+        subtitle: 'Kiến trúc, bảo mật API, DevOps, hiệu năng giao diện và hệ thống nội dung.',
+        badges: ['5-6 năm kinh nghiệm', 'Backend và API', 'Tư duy DevOps', 'Ưu tiên bảo mật'],
         description:
-          `${siteConfig.name} được định vị như một CV sống: trình bày kinh nghiệm backend Laravel/PHP, tư duy sản phẩm LMS/CMS/CRM, chatbot giáo dục và năng lực giao diện Vue.js hoặc Next.js chỉn chu.`,
+          `${siteConfig.name} được định vị như một CV sống cho kỹ sư có khả năng đi từ yêu cầu sản phẩm đến kiến trúc, API, cơ sở dữ liệu, giao diện, SEO, bảo mật và vận hành trên môi trường thật.`,
         projectMap: 'Xem bản đồ dự án',
         print: 'In hồ sơ',
         corePositioning: 'Định vị cốt lõi',
-        imageTitle: 'Education SaaS + Full-stack Delivery',
+        imageTitle: 'Kỹ thuật sản phẩm và phát hành an toàn',
         facts: [
-          ['Backend', 'PHP, Laravel, APIs'],
-          ['Sản phẩm', 'LMS, CMS, CRM'],
-          ['Frontend', 'Vue.js, Next.js, React'],
-          ['Domain', 'Luồng chatbot giáo dục'],
+          ['Kinh nghiệm', '5-6 năm full-stack'],
+          ['Backend', 'API, xác thực, dữ liệu'],
+          ['Frontend', 'Next.js, React, Vue.js'],
+          ['Vận hành', 'Bảo mật, DevOps, SEO'],
         ],
         capabilityEyebrow: 'Bản đồ năng lực',
-        capabilityTitle: 'Điều hồ sơ nên truyền tải đầu tiên.',
+        capabilityTitle: 'Điều hồ sơ kỹ thuật nên truyền tải đầu tiên.',
         systemEyebrow: 'Hệ thống sản phẩm',
-        systemTitle: 'Kinh nghiệm được sắp xếp theo loại hệ thống.',
+        systemTitle: 'Kinh nghiệm được sắp xếp theo năng lực vận hành thực tế.',
         systemDescription:
-          'Cấu trúc này thân thiện với phỏng vấn vì ánh xạ kỹ năng vào sản phẩm mà công ty dễ nhận ra: nền tảng giáo dục, vận hành nội dung, vận hành khách hàng và tự động hóa.',
-        stackEyebrow: 'Technical Stack',
+          'Cấu trúc này giúp người đọc đánh giá chiều sâu thay vì chỉ nhìn danh sách framework: hệ thống quản trị, dữ liệu, hiệu năng, bảo mật, quy trình phát hành và khả năng vận hành sau khi deploy.',
+        stackEyebrow: 'Bộ kỹ năng',
         stackTitle: 'Kỹ năng được nhóm để đọc nhanh.',
         proofEyebrow: 'Bằng chứng',
         proofTitle: 'Những điểm cụ thể để trình bày trong phỏng vấn kỹ thuật.',
@@ -160,117 +158,117 @@ export default function ResumePage() {
         strengths: [
           {
             icon: Server,
-            label: 'PHP / Laravel',
-            detail: 'Backend API, auth, mô hình dữ liệu, workflow admin, logic CMS và module nghiệp vụ dễ bảo trì.',
+            label: 'Backend và API',
+            detail: 'REST API, xác thực, phân quyền, kiểm tra dữ liệu, mô hình dữ liệu, tác vụ nền và ranh giới service dễ bảo trì.',
           },
           {
-            icon: GraduationCap,
-            label: 'Hệ thống giáo dục',
-            detail: 'Luồng LMS, cấu trúc khóa học, tiến độ học viên, vận hành nội dung và tư duy sản phẩm giáo dục.',
+            icon: ShieldCheck,
+            label: 'Kỹ thuật bảo mật',
+            detail: 'Phiên đăng nhập an toàn, gia cố API, giới hạn tần suất, CSP, kiểm tra đầu vào, least privilege và giảm dữ liệu public.',
           },
           {
-            icon: LayoutDashboard,
-            label: 'CMS / CRM',
-            detail: 'Quản lý nội dung, hồ sơ khách hàng/học viên, dashboard, bộ lọc, role và màn hình vận hành.',
+            icon: Workflow,
+            label: 'DevOps và phát hành',
+            detail: 'Môi trường chạy bằng Docker, kiểm tra CI/CD, tách môi trường, kỷ luật phát hành, rollback và checklist vận hành.',
           },
           {
             icon: Code2,
-            label: 'UI Vue / Next',
-            detail: 'Giao diện hiện đại với Vue.js, Next.js, React, TypeScript, Tailwind CSS và UX responsive.',
+            label: 'Hệ thống giao diện',
+            detail: 'Giao diện với Next.js, React, Vue.js, TypeScript, Tailwind CSS, trạng thái responsive, khả năng truy cập và giới hạn hiệu năng.',
           },
         ],
         systemExperience: [
           {
-            icon: GraduationCap,
-            title: 'Nền tảng LMS',
-            detail: 'Catalog khóa học, trang bài học, trạng thái ghi danh, tiến độ, đánh giá và luồng học tập theo role.',
+            icon: LayoutDashboard,
+            title: 'Nền tảng nhiều màn hình quản trị',
+            detail: 'Dashboard, bộ lọc, hàng đợi duyệt nội dung, trạng thái xuất bản, màn hình theo quyền và quy trình vận hành lặp lại.',
           },
           {
             icon: Database,
-            title: 'Sản phẩm CMS',
-            detail: 'Mô hình bài viết, danh mục, tag, trạng thái publish, media field, admin form và cấu trúc SEO-friendly.',
+            title: 'Độ tin cậy dữ liệu',
+            detail: 'Thiết kế schema, migration, index, rà soát truy vấn, backup/restore và xử lý an toàn dữ liệu do người dùng tạo.',
+          },
+          {
+            icon: Gauge,
+            title: 'Kỹ thuật hiệu năng',
+            detail: 'Core Web Vitals, chiến lược bộ nhớ đệm, phân phối hình ảnh, giới hạn gói JavaScript, trạng thái tải và tín hiệu giám sát.',
           },
           {
             icon: Workflow,
-            title: 'Workflow CRM',
-            detail: 'Hồ sơ lead/học viên, pipeline trạng thái, màn hình search/filter, report và vận hành staff lặp lại.',
-          },
-          {
-            icon: Bot,
-            title: 'Chatbot giáo dục',
-            detail: 'Luồng hỗ trợ câu hỏi khóa học, thu lead, hỗ trợ học tập, FAQ automation và messaging giáo dục.',
+            title: 'Tự động hóa và phát hành',
+            detail: 'Pipeline CI/CD, môi trường container, ghi chú phát hành rõ ràng, kế hoạch rollback và thói quen sẵn sàng xử lý sự cố.',
           },
         ],
         skillGroups: [
           {
             title: 'Backend',
-            items: ['PHP', 'Laravel', 'REST APIs', 'Auth', 'MySQL', 'PostgreSQL'],
+            items: ['Node.js', 'PHP', 'Laravel', 'REST APIs', 'Auth', 'PostgreSQL'],
           },
           {
             title: 'Frontend',
             items: ['Vue.js', 'Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Responsive UI'],
           },
           {
-            title: 'Hệ thống sản phẩm',
-            items: ['LMS', 'CMS', 'CRM', 'Admin dashboards', 'Education workflows', 'Chatbot flows'],
+            title: 'Nền tảng',
+            items: ['Docker', 'CI/CD', 'Linux cơ bản', 'Quy trình Git', 'Supabase', 'Cấu hình môi trường'],
           },
           {
-            title: 'Production',
-            items: ['SEO', 'Bảo mật', 'Hiệu năng', 'Supabase', 'Content modeling', 'UX writing'],
+            title: 'Vận hành',
+            items: ['SEO', 'Bảo mật', 'Hiệu năng', 'Giám sát', 'Mô hình nội dung', 'Viết UX'],
           },
         ],
         proof: [
           {
-            title: 'Kinh nghiệm sản phẩm giáo dục',
-            meta: 'LMS / Chatbot',
-            detail: 'Có thể trình bày workflow giáo dục thật: hành trình học viên, delivery nội dung, tự động hóa và hỗ trợ.',
+            title: 'Tư duy sản phẩm trên môi trường thật',
+            meta: 'Kiến trúc / UX',
+            detail: 'Có thể chuyển yêu cầu sản phẩm thành ranh giới hệ thống, quy trình người dùng, quyền sở hữu dữ liệu, độ trễ và rủi ro vận hành.',
           },
           {
-            title: 'Tư duy hệ thống nghiệp vụ',
-            meta: 'CMS / CRM',
-            detail: 'Có thể giải thích màn hình admin, quan hệ dữ liệu, role, filter, record và use case vận hành hằng ngày.',
+            title: 'Triển khai an toàn từ mặc định',
+            meta: 'API / Bảo mật',
+            detail: 'Có thể giải thích vì sao phân quyền, kiểm tra dữ liệu, giới hạn tần suất, định hình response và cookie an toàn phải nằm ở server.',
           },
           {
             title: 'Triển khai full-stack',
-            meta: 'Laravel / API / UI',
-            detail: 'Có thể nối logic backend và UX frontend thay vì xem giao diện như lớp tách rời.',
+            meta: 'API / UI / Data',
+            detail: 'Có thể nối logic backend, thiết kế dữ liệu, quy trình quản trị và trạng thái frontend thay vì xem UI là lớp tách rời.',
           },
           {
             title: 'ShadowDev làm bằng chứng',
-            meta: 'Next.js / CMS',
-            detail: 'Dự án này chứng minh admin login, blog publishing, SEO, responsive UI và API hardening.',
+            meta: 'Next.js / CMS / SEO',
+            detail: 'Dự án này chứng minh đăng nhập quản trị, xuất bản song ngữ, SEO, giao diện responsive, gia cố API và quy trình nội dung.',
           },
         ],
         interviewPoints: [
-          'Walk through một feature LMS từ database model tới màn hình học viên.',
-          'Giải thích CMS/CRM admin interface nên hỗ trợ staff làm việc lặp lại thế nào.',
-          'So sánh trách nhiệm backend Laravel với frontend Vue.js hoặc Next.js.',
-          'Trình bày ShadowDev admin login, luồng đăng bài CMS, protected API route và cấu trúc SEO.',
+          'Đi qua một tính năng từ mô hình nghiệp vụ, hợp đồng API, quy trình quản trị, trạng thái giao diện đến tín hiệu giám sát.',
+          'Giải thích cách gia cố form công khai, hệ thống bình luận hoặc API ghi của quản trị trước các kiểu tấn công phổ biến.',
+          'Trình bày Docker, CI/CD, biến môi trường, rollback, log, metric và mức sẵn sàng vận hành cho một web app.',
+          'Trình bày đăng nhập quản trị ShadowDev, CMS song ngữ, API được bảo vệ, cấu trúc SEO và hành vi phân trang.',
         ],
       }
     : {
         eyebrow: 'Interview Profile',
-        title: 'Full-stack developer for education systems.',
-        subtitle: 'CMS/CRM products, chatbot flows, and modern frontend interfaces.',
-        badges: ['Laravel backend', 'Education SaaS', 'CMS/CRM UX', 'Vue / Next UI'],
+        title: 'Full-stack/product engineer with production discipline.',
+        subtitle: 'Architecture, API security, DevOps, frontend performance, and content systems.',
+        badges: ['5-6 years experience', 'Backend & API', 'DevOps mindset', 'Security-first UI'],
         description:
-          `${siteConfig.name} is positioned as a live CV: it presents Laravel/PHP backend experience, LMS/CMS/CRM product thinking, education chatbot work, and polished Vue.js or Next.js interface capability.`,
+          `${siteConfig.name} is positioned as a live CV for an engineer who can move from product requirements to architecture, APIs, databases, interfaces, SEO, security, and production operations.`,
         projectMap: 'View project map',
         print: 'Print profile',
         corePositioning: 'Core Positioning',
-        imageTitle: 'Education SaaS + Full-stack Delivery',
+        imageTitle: 'Product Engineering + Secure Delivery',
         facts: [
-          ['Backend', 'PHP, Laravel, APIs'],
-          ['Products', 'LMS, CMS, CRM'],
+          ['Experience', '5-6 years full-stack'],
+          ['Backend', 'APIs, auth, data models'],
           ['Frontend', 'Vue.js, Next.js, React'],
-          ['Domain', 'Education chatbot flows'],
+          ['Production', 'Security, DevOps, SEO'],
         ],
         capabilityEyebrow: 'Capability Map',
-        capabilityTitle: 'What your profile should communicate first.',
+        capabilityTitle: 'What a technical profile should communicate first.',
         systemEyebrow: 'Product Systems',
-        systemTitle: 'Experience arranged by system type.',
+        systemTitle: 'Experience arranged by production capability.',
         systemDescription:
-          'This structure is interview-friendly because it maps your skills to products companies recognize: education platforms, content operations, customer operations, and automation.',
+          'This structure helps readers assess depth instead of scanning a framework list: admin systems, data, performance, security, delivery, and behavior after deploy.',
         stackEyebrow: 'Technical Stack',
         stackTitle: 'Skills grouped for quick scanning.',
         proofEyebrow: 'Proof Points',
@@ -335,7 +333,7 @@ export default function ResumePage() {
             <div className="relative aspect-[16/10] border-b border-[var(--line)]">
               <Image
                 src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=800&fit=crop"
-                alt="Modern education technology workspace"
+                alt="Modern product engineering workspace"
                 fill
                 sizes="(min-width: 1024px) 46vw, 100vw"
                 className="object-cover"
@@ -365,7 +363,7 @@ export default function ResumePage() {
             <Gauge size={15} />
             {copy.capabilityEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">{copy.capabilityTitle}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text)] sm:text-4xl">{copy.capabilityTitle}</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {copy.strengths.map((item, index) => {
@@ -397,7 +395,7 @@ export default function ResumePage() {
               <LayoutDashboard size={15} />
               {copy.systemEyebrow}
             </div>
-            <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">{copy.systemTitle}</h2>
+            <h2 className="text-2xl font-bold text-[var(--text)] sm:text-4xl">{copy.systemTitle}</h2>
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
               {copy.systemDescription}
             </p>
@@ -432,7 +430,7 @@ export default function ResumePage() {
             <Code2 size={15} />
             {copy.stackEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)]">{copy.stackTitle}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text)] sm:text-3xl">{copy.stackTitle}</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {copy.skillGroups.map((group) => (
@@ -456,7 +454,7 @@ export default function ResumePage() {
             <ShieldCheck size={15} />
             {copy.proofEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)]">{copy.proofTitle}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text)] sm:text-3xl">{copy.proofTitle}</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {copy.proof.map((item, index) => (
@@ -477,7 +475,7 @@ export default function ResumePage() {
       </Section>
 
       <Section withDividerTop>
-        <div className="surface-card grid gap-6 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="surface-card grid gap-6 p-5 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="micro-label mb-3">{copy.scriptEyebrow}</p>
             <h2 className="text-2xl font-bold text-[var(--text)] sm:text-3xl">{copy.scriptTitle}</h2>

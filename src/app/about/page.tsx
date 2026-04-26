@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Code, Palette, ShieldCheck, Zap } from 'lucide-react';
 import Section from '@/components/ui/Section';
@@ -18,79 +19,91 @@ export default function AboutPage() {
   const copy = locale === 'vi'
     ? {
         pageTitle: 'Giới thiệu ShadowDev',
-        pageDescription: 'Một journal kỹ thuật định hướng sản phẩm, tập trung vào chất lượng giao diện, bảo mật và hiệu năng.',
-        heroTitle: 'Xây dựng cho phần việc thầm lặng phía sau sản phẩm đáng tin cậy.',
+        pageDescription: 'Nơi chia sẻ kiến thức về kiến trúc web, bảo mật, DevOps, hiệu năng và cách vận hành sản phẩm thực tế.',
+        heroTitle: 'ShadowDev tập trung vào những quyết định kỹ thuật làm sản phẩm đáng tin hơn.',
         paragraphs: [
-          `${siteConfig.name} ghi lại các quyết định giúp sản phẩm web sắc nét hơn: kiến trúc thông tin, trạng thái tương tác, giao diện dễ truy cập, luồng dữ liệu an toàn và delivery đáng tin cậy.`,
-          'Stack được chọn theo hướng hiện đại nhưng bảo thủ: Next.js, TypeScript, Supabase và các UI primitive nhỏ để giao diện nhanh, dễ bảo trì.',
-          'Nội dung dành cho builder quan tâm cả craft lẫn hành vi production: trông thế nào, dùng ra sao, lỗi kiểu gì và phục hồi nhanh đến đâu.',
+          `${siteConfig.name} ghi lại cách xây hệ thống web có thể vận hành lâu dài: ranh giới kiến trúc, hợp đồng API, xác thực, dữ liệu, quy trình phát hành, giám sát và trải nghiệm người dùng sau khi triển khai.`,
+          'Trang này không phải portfolio trang trí. Nó dùng chính website làm ví dụ: blog song ngữ, khu quản trị, API được bảo vệ, SEO, bình luận, liên hệ và các ghi chú quyết định kỹ thuật có thể kiểm chứng.',
+          'Nội dung dành cho người làm kỹ thuật muốn đi xa hơn mức “chạy được”: có bảo mật, có số đo, có đường rollback, có dữ liệu để debug và có cấu trúc để phát triển lâu dài.',
         ],
         skillsTitle: 'Kỹ năng',
-        skillsDescription: 'Hệ điều hành phía sau bản thiết kế lại',
+        skillsDescription: 'Các năng lực chính phía sau ShadowDev',
         principlesTitle: 'Nguyên tắc vận hành',
         skills: [
-          { icon: Code, title: 'Product Engineering', description: 'Xây dựng ứng dụng hiện đại với React, Next.js, TypeScript và kiến trúc thực dụng.' },
-          { icon: Palette, title: 'Hệ thống UX', description: 'Thiết kế giao diện dễ quét, trạng thái rõ ràng và hỗ trợ công việc lặp lại.' },
-          { icon: Zap, title: 'Hiệu năng', description: 'Tối ưu đường tải, chi phí render và phân phối nội dung bằng dữ liệu đo được.' },
-          { icon: ShieldCheck, title: 'Bảo mật', description: 'Gia cố route public, API write, form và dữ liệu trả ra theo mặc định.' },
+          { icon: Code, title: 'Kiến trúc và API', description: 'Thiết kế ranh giới module, hợp đồng API, dữ liệu, kiểm tra đầu vào và quy trình quản trị có thể mở rộng.' },
+          { icon: Palette, title: 'Trải nghiệm sản phẩm', description: 'Giao diện dễ đọc, dễ thao tác lặp lại, trạng thái rõ ràng và hiển thị tốt trên nhiều kích thước màn hình.' },
+          { icon: Zap, title: 'Hiệu năng và phát hành', description: 'Tối ưu đường tải, bộ nhớ đệm, chiến lược hình ảnh, CI/CD, Docker và kiểm soát mỗi lần phát hành.' },
+          { icon: ShieldCheck, title: 'Nền tảng bảo mật', description: 'Gia cố xác thực, phiên đăng nhập, API công khai/quản trị, form, bình luận, lọc HTML và giới hạn tần suất.' },
         ],
         principles: [
           {
-            title: 'Ship màn hình hữu ích đầu tiên',
-            company: 'UX',
-            period: 'Rõ ràng',
-            description: 'Mỗi trang bắt đầu từ việc người đọc cần làm, không phải từ lớp trang trí marketing.',
+            title: 'Thiết kế theo ranh giới sở hữu',
+            company: 'Kiến trúc',
+            period: 'Dễ bảo trì',
+            description: 'Mỗi module cần biết dữ liệu nào thuộc về nó, API nào là hợp đồng công khai và phần nào chỉ là chi tiết nội bộ để hệ thống không phình ra khó kiểm soát.',
           },
           {
-            title: 'Bảo vệ bề mặt public',
-            company: 'API',
+            title: 'Bảo mật là mặc định, không phải bước cuối',
+            company: 'Bảo mật',
             period: 'Tin cậy',
-            description: 'Public read route giữ đơn giản, write route cần quyền admin và dữ liệu public được giảm thiểu.',
+            description: 'Xác thực, phân quyền, kiểm tra dữ liệu, giới hạn tần suất, CSP, chính sách cookie và giảm dữ liệu trả ra phải được tính ngay từ lúc thiết kế API.',
           },
           {
-            title: 'Đo trước khi thêm trọng lượng',
+            title: 'Môi trường thật phải quan sát được',
+            company: 'Độ tin cậy',
+            period: 'Vận hành',
+            description: 'Một tính năng chỉ thật sự xong khi có log, metric, trạng thái lỗi, đường rollback và tín hiệu đủ rõ để debug khi người dùng bị ảnh hưởng.',
+          },
+          {
+            title: 'Hiệu năng có ngân sách',
             company: 'Hiệu năng',
             period: 'Tốc độ',
-            description: 'Animation và hình ảnh phục vụ nội dung, trong khi đường tải vẫn gọn và cache-friendly.',
+            description: 'Animation, ảnh và thư viện phải phục vụ nội dung. Kích thước gói JavaScript, Core Web Vitals và trạng thái tải cần được kiểm soát như một phần của chất lượng sản phẩm.',
           },
         ],
       }
     : {
         pageTitle: 'About ShadowDev',
-        pageDescription: 'A product-minded engineering studio journal focused on interface quality, security, and performance.',
-        heroTitle: 'Built for the quiet work behind reliable products.',
+        pageDescription: 'A technical engineering journal about web architecture, security, DevOps, performance, and production product systems.',
+        heroTitle: 'ShadowDev writes about the engineering work that makes products trustworthy.',
         paragraphs: [
-          `${siteConfig.name} documents the decisions that make web products feel sharp: information architecture, interaction states, accessible interfaces, secure data flow, and reliable delivery.`,
-          'The stack is intentionally modern but conservative: Next.js, TypeScript, Supabase, and small UI primitives that keep the interface fast and maintainable.',
-          'The writing is for builders who care about both craft and production behavior: how it looks, how it feels, how it fails, and how quickly it recovers.',
+          `${siteConfig.name} documents how to build web systems that can operate: architecture boundaries, API contracts, auth, data, delivery pipelines, observability, and user experience after deployment.`,
+          'This is not a decorative portfolio. It presents engineering thinking through real surfaces: bilingual publishing, admin workflows, protected APIs, SEO, comments/contact, and inspectable decision notes.',
+          'The writing is for builders who want to move from “it works” to “it survives production”: security, measurement, rollback paths, debugging signals, and structures that can grow.',
         ],
         skillsTitle: 'My Skills',
-        skillsDescription: 'The operating system behind the redesign',
+        skillsDescription: 'Core capabilities behind ShadowDev',
         principlesTitle: 'Operating Principles',
         skills: [
-          { icon: Code, title: 'Product Engineering', description: 'Building modern applications with React, Next.js, TypeScript, and pragmatic architecture.' },
-          { icon: Palette, title: 'UX Systems', description: 'Designing interfaces that scan quickly, explain state clearly, and support repeated work.' },
-          { icon: Zap, title: 'Performance', description: 'Optimizing loading paths, rendering cost, and content delivery for measurable speed.' },
-          { icon: ShieldCheck, title: 'Security', description: 'Hardening public routes, API writes, form handling, and data exposure by default.' },
+          { icon: Code, title: 'Architecture & API', description: 'Designing module boundaries, contracts, data, validation, and admin workflows that can grow.' },
+          { icon: Palette, title: 'Product UX', description: 'Interfaces optimized for scanning, repeated work, clear states, and responsive density.' },
+          { icon: Zap, title: 'Performance & Delivery', description: 'Loading paths, caching, image strategy, CI/CD, Docker, and release discipline.' },
+          { icon: ShieldCheck, title: 'Security Baseline', description: 'Auth, sessions, public/admin APIs, forms, comments, HTML sanitization, and rate limits.' },
         ],
         principles: [
           {
-            title: 'Ship the first useful screen',
-            company: 'UX',
-            period: 'Clarity',
-            description: 'Every page starts with the task the visitor came to do, not decorative marketing weight.',
+            title: 'Design around ownership boundaries',
+            company: 'Architecture',
+            period: 'Maintainability',
+            description: 'Each module should know which data it owns, which APIs are public contracts, and which parts are internal implementation details.',
           },
           {
-            title: 'Secure public surfaces',
-            company: 'API',
+            title: 'Security is default, not a final checklist',
+            company: 'Security',
             period: 'Trust',
-            description: 'Public read routes stay simple, write routes require admin credentials, and data exposure is reduced.',
+            description: 'Auth, authorization, validation, rate limits, CSP, cookie policy, and response minimization belong in the API design from the start.',
           },
           {
-            title: 'Measure before adding weight',
+            title: 'Production must be observable',
+            company: 'Reliability',
+            period: 'Operate',
+            description: 'A feature is not complete until logs, metrics, error states, rollback paths, and debugging signals exist for user-impacting failures.',
+          },
+          {
+            title: 'Performance has a budget',
             company: 'Performance',
             period: 'Speed',
-            description: 'Animation and imagery support content, while loading paths stay lean and cache-friendly.',
+            description: 'Animation, imagery, and libraries must serve the content. Bundle cost, Core Web Vitals, and loading states are product quality concerns.',
           },
         ],
       };
@@ -143,22 +156,49 @@ export default function AboutPage() {
               </div>
             </motion.div>
 
-            {/* Khối nhận diện dùng chữ thay ảnh cá nhân để tránh phụ thuộc asset ngoài. */}
+            {/* Ảnh nhận diện dùng asset nội bộ để tránh phụ thuộc CDN ngoài trên trang About. */}
             <motion.div
               variants={itemVariants}
               className="relative"
             >
-              <div className="surface-card flex aspect-square w-full items-center justify-center p-8">
-                <div className="text-center">
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                className="relative mx-auto w-full max-w-[calc(100%-1.5rem)] sm:max-w-[440px]"
+              >
+                <div aria-hidden className="absolute -inset-3 rounded-lg border border-[rgba(102,217,194,0.14)]" />
+                <div aria-hidden className="absolute -inset-1 rounded-lg border border-[rgba(231,182,90,0.12)]" />
+                <div className="relative aspect-square overflow-hidden rounded-lg border border-[rgba(102,217,194,0.38)] bg-[linear-gradient(180deg,rgba(2,5,4,0.96),rgba(4,12,10,0.86))] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.42),0_0_44px_rgba(102,217,194,0.16)]">
+                  <Image
+                    src="/images/logo.png"
+                    alt={`${siteConfig.name} logo`}
+                    width={1024}
+                    height={1024}
+                    sizes="(min-width: 768px) 440px, 88vw"
+                    priority
+                    unoptimized
+                    className="h-full w-full rounded-md object-cover"
+                  />
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-2 rounded-md border border-[rgba(244,241,232,0.08)]"
+                  />
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-2 rounded-md bg-[linear-gradient(115deg,transparent_0%,rgba(102,217,194,0.1)_46%,transparent_58%)] opacity-70 mix-blend-screen"
+                  />
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[rgba(102,217,194,0.12)] sm:h-32 sm:w-32"
-                  >
-                    <span className="text-4xl sm:text-5xl font-bold text-[var(--accent)]">S</span>
-                  </motion.div>
-                  <p className="text-[var(--text-muted)] text-sm sm:text-base">{siteConfig.name}</p>
+                    aria-hidden
+                    animate={{ top: ['8%', '92%', '8%'] }}
+                    transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+                    className="pointer-events-none absolute inset-x-4 h-px bg-[rgba(102,217,194,0.62)] shadow-[0_0_14px_rgba(102,217,194,0.75)]"
+                  />
+                  <span aria-hidden className="absolute left-3 top-3 h-8 w-8 border-l border-t border-[rgba(102,217,194,0.75)]" />
+                  <span aria-hidden className="absolute right-3 top-3 h-8 w-8 border-r border-t border-[rgba(102,217,194,0.75)]" />
+                  <span aria-hidden className="absolute bottom-3 left-3 h-8 w-8 border-b border-l border-[rgba(102,217,194,0.75)]" />
+                  <span aria-hidden className="absolute bottom-3 right-3 h-8 w-8 border-b border-r border-[rgba(102,217,194,0.75)]" />
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
       </Section>
@@ -195,7 +235,7 @@ export default function AboutPage() {
                   key={index}
                   variants={itemVariants}
                   whileHover={{ y: -5 }}
-                  className="surface-card p-6 text-center transition-all hover:-translate-y-1 hover:border-[rgba(102,217,194,0.45)]"
+                  className="surface-card p-5 text-center transition-all hover:-translate-y-1 hover:border-[rgba(102,217,194,0.45)] sm:p-6"
                 >
                   <motion.div
                     whileHover={{ scale: 1.1, rotate: 5 }}
@@ -241,7 +281,7 @@ export default function AboutPage() {
                 key={index}
                 variants={itemVariants}
                 whileHover={{ x: 5 }}
-                className="surface-card border-l-4 border-[var(--accent)] p-6 transition-all hover:translate-x-1 hover:border-[var(--amber)] sm:p-8"
+                className="surface-card border-l-4 border-[var(--accent)] p-5 transition-all hover:translate-x-1 hover:border-[var(--amber)] sm:p-8"
               >
                 <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)] mb-2">
                   {exp.title}
