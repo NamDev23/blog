@@ -48,12 +48,16 @@ export function createCodeCopyHandler() {
 function getCodeBlockTitle(attributes: string) {
   const normalized = attributes.toLowerCase();
   if (/language-(bash|sh|shell|zsh|terminal|console)/.test(normalized)) return 'Terminal';
+  if (/language-(yaml|yml)/.test(normalized)) return 'YAML';
+  if (/language-dockerfile/.test(normalized)) return 'Dockerfile';
+  if (/language-nginx/.test(normalized)) return 'Nginx';
   if (/language-(js|javascript|jsx)/.test(normalized)) return 'JavaScript';
   if (/language-(ts|typescript|tsx)/.test(normalized)) return 'TypeScript';
   if (/language-php/.test(normalized)) return 'PHP';
   if (/language-sql/.test(normalized)) return 'SQL';
   if (/language-css/.test(normalized)) return 'CSS';
   if (/language-html/.test(normalized)) return 'HTML';
+  if (/language-(text|txt)/.test(normalized)) return 'Text';
   return 'Terminal';
 }
 

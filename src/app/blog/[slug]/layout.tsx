@@ -29,6 +29,8 @@ export async function generateMetadata({
       .from('posts')
       .select('*')
       .eq('slug', slug)
+      .not('published_at', 'is', null)
+      .lte('published_at', new Date().toISOString())
       .single();
 
     if (error || !post) {

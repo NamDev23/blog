@@ -5,14 +5,89 @@ import { Code, Palette, ShieldCheck, Zap } from 'lucide-react';
 import Section from '@/components/ui/Section';
 import PageHeader from '@/components/ui/PageHeader';
 import { siteConfig } from '@/lib/site';
+import { useLanguage } from '@/lib/i18n';
 
 export default function AboutPage() {
-  const skills = [
-    { icon: Code, title: 'Product Engineering', description: 'Building modern applications with React, Next.js, TypeScript, and pragmatic architecture.' },
-    { icon: Palette, title: 'UX Systems', description: 'Designing interfaces that scan quickly, explain state clearly, and support repeated work.' },
-    { icon: Zap, title: 'Performance', description: 'Optimizing loading paths, rendering cost, and content delivery for measurable speed.' },
-    { icon: ShieldCheck, title: 'Security', description: 'Hardening public routes, API writes, form handling, and data exposure by default.' },
-  ];
+  const { locale } = useLanguage();
+  const copy = locale === 'vi'
+    ? {
+        pageTitle: 'Giới thiệu ShadowDev',
+        pageDescription: 'Một journal kỹ thuật định hướng sản phẩm, tập trung vào chất lượng giao diện, bảo mật và hiệu năng.',
+        heroTitle: 'Xây dựng cho phần việc thầm lặng phía sau sản phẩm đáng tin cậy.',
+        paragraphs: [
+          `${siteConfig.name} ghi lại các quyết định giúp sản phẩm web sắc nét hơn: kiến trúc thông tin, trạng thái tương tác, giao diện dễ truy cập, luồng dữ liệu an toàn và delivery đáng tin cậy.`,
+          'Stack được chọn theo hướng hiện đại nhưng bảo thủ: Next.js, TypeScript, Supabase và các UI primitive nhỏ để giao diện nhanh, dễ bảo trì.',
+          'Nội dung dành cho builder quan tâm cả craft lẫn hành vi production: trông thế nào, dùng ra sao, lỗi kiểu gì và phục hồi nhanh đến đâu.',
+        ],
+        skillsTitle: 'Kỹ năng',
+        skillsDescription: 'Hệ điều hành phía sau bản thiết kế lại',
+        principlesTitle: 'Nguyên tắc vận hành',
+        skills: [
+          { icon: Code, title: 'Product Engineering', description: 'Xây dựng ứng dụng hiện đại với React, Next.js, TypeScript và kiến trúc thực dụng.' },
+          { icon: Palette, title: 'Hệ thống UX', description: 'Thiết kế giao diện dễ quét, trạng thái rõ ràng và hỗ trợ công việc lặp lại.' },
+          { icon: Zap, title: 'Hiệu năng', description: 'Tối ưu đường tải, chi phí render và phân phối nội dung bằng dữ liệu đo được.' },
+          { icon: ShieldCheck, title: 'Bảo mật', description: 'Gia cố route public, API write, form và dữ liệu trả ra theo mặc định.' },
+        ],
+        principles: [
+          {
+            title: 'Ship màn hình hữu ích đầu tiên',
+            company: 'UX',
+            period: 'Rõ ràng',
+            description: 'Mỗi trang bắt đầu từ việc người đọc cần làm, không phải từ lớp trang trí marketing.',
+          },
+          {
+            title: 'Bảo vệ bề mặt public',
+            company: 'API',
+            period: 'Tin cậy',
+            description: 'Public read route giữ đơn giản, write route cần quyền admin và dữ liệu public được giảm thiểu.',
+          },
+          {
+            title: 'Đo trước khi thêm trọng lượng',
+            company: 'Hiệu năng',
+            period: 'Tốc độ',
+            description: 'Animation và hình ảnh phục vụ nội dung, trong khi đường tải vẫn gọn và cache-friendly.',
+          },
+        ],
+      }
+    : {
+        pageTitle: 'About ShadowDev',
+        pageDescription: 'A product-minded engineering studio journal focused on interface quality, security, and performance.',
+        heroTitle: 'Built for the quiet work behind reliable products.',
+        paragraphs: [
+          `${siteConfig.name} documents the decisions that make web products feel sharp: information architecture, interaction states, accessible interfaces, secure data flow, and reliable delivery.`,
+          'The stack is intentionally modern but conservative: Next.js, TypeScript, Supabase, and small UI primitives that keep the interface fast and maintainable.',
+          'The writing is for builders who care about both craft and production behavior: how it looks, how it feels, how it fails, and how quickly it recovers.',
+        ],
+        skillsTitle: 'My Skills',
+        skillsDescription: 'The operating system behind the redesign',
+        principlesTitle: 'Operating Principles',
+        skills: [
+          { icon: Code, title: 'Product Engineering', description: 'Building modern applications with React, Next.js, TypeScript, and pragmatic architecture.' },
+          { icon: Palette, title: 'UX Systems', description: 'Designing interfaces that scan quickly, explain state clearly, and support repeated work.' },
+          { icon: Zap, title: 'Performance', description: 'Optimizing loading paths, rendering cost, and content delivery for measurable speed.' },
+          { icon: ShieldCheck, title: 'Security', description: 'Hardening public routes, API writes, form handling, and data exposure by default.' },
+        ],
+        principles: [
+          {
+            title: 'Ship the first useful screen',
+            company: 'UX',
+            period: 'Clarity',
+            description: 'Every page starts with the task the visitor came to do, not decorative marketing weight.',
+          },
+          {
+            title: 'Secure public surfaces',
+            company: 'API',
+            period: 'Trust',
+            description: 'Public read routes stay simple, write routes require admin credentials, and data exposure is reduced.',
+          },
+          {
+            title: 'Measure before adding weight',
+            company: 'Performance',
+            period: 'Speed',
+            description: 'Animation and imagery support content, while loading paths stay lean and cache-friendly.',
+          },
+        ],
+      };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -38,8 +113,8 @@ export default function AboutPage() {
       {/* Page Header */}
       {/* Page Header */}
       <PageHeader
-        title="About ShadowDev"
-        description="A product-minded engineering studio journal focused on interface quality, security, and performance."
+        title={copy.pageTitle}
+        description={copy.pageDescription}
       />
 
       {/* Bio Section */}
@@ -55,18 +130,12 @@ export default function AboutPage() {
             {/* Text */}
             <motion.div variants={itemVariants}>
               <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-[var(--text)]">
-                Built for the quiet work behind reliable products.
+                {copy.heroTitle}
               </h2>
               <div className="space-y-4 text-[var(--text-muted)] text-sm sm:text-base">
-                <p className="leading-relaxed">
-                  {siteConfig.name} documents the decisions that make web products feel sharp: information architecture, interaction states, accessible interfaces, secure data flow, and reliable delivery.
-                </p>
-                <p className="leading-relaxed">
-                  The stack is intentionally modern but conservative: Next.js, TypeScript, Supabase, and small UI primitives that keep the interface fast and maintainable.
-                </p>
-                <p className="leading-relaxed">
-                  The writing is for builders who care about both craft and production behavior: how it looks, how it feels, how it fails, and how quickly it recovers.
-                </p>
+                {copy.paragraphs.map((paragraph) => (
+                  <p key={paragraph} className="leading-relaxed">{paragraph}</p>
+                ))}
               </div>
             </motion.div>
 
@@ -101,10 +170,10 @@ export default function AboutPage() {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="gradient-text mb-4">
-              My Skills
+              {copy.skillsTitle}
             </h2>
             <p className="text-[var(--text-muted)] text-base sm:text-lg text-balance">
-              The operating system behind the redesign
+              {copy.skillsDescription}
             </p>
           </motion.div>
 
@@ -115,7 +184,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
           >
-            {skills.map((skill, index) => {
+            {copy.skills.map((skill, index) => {
               const Icon = skill.icon;
               return (
                 <motion.div
@@ -152,7 +221,7 @@ export default function AboutPage() {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="gradient-text mb-4">
-              Operating Principles
+              {copy.principlesTitle}
             </h2>
           </motion.div>
 
@@ -163,26 +232,7 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="space-y-4 sm:space-y-6"
           >
-            {[
-              {
-                title: 'Ship the first useful screen',
-                company: 'UX',
-                period: 'Clarity',
-                description: 'Every page starts with the task the visitor came to do, not decorative marketing weight.',
-              },
-              {
-                title: 'Secure public surfaces',
-                company: 'API',
-                period: 'Trust',
-                description: 'Public read routes stay simple, write routes require admin credentials, and data exposure is reduced.',
-              },
-              {
-                title: 'Measure before adding weight',
-                company: 'Performance',
-                period: 'Speed',
-                description: 'Animation and imagery support content, while loading paths stay lean and cache-friendly.',
-              },
-            ].map((exp, index) => (
+            {copy.principles.map((exp, index) => (
               <motion.div
                 key={index}
                 variants={itemVariants}

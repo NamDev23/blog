@@ -6,8 +6,39 @@ import { ArrowRight, Bot, GraduationCap, Server, ShieldCheck } from 'lucide-reac
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { siteConfig } from '@/lib/site';
+import { useLanguage } from '@/lib/i18n';
+import { localizedPath } from '@/lib/locales';
 
 export default function HeroSection() {
+  const { locale } = useLanguage();
+  const copy = locale === 'vi'
+    ? {
+        badge: `${siteConfig.shortName} / Laravel, hệ thống giáo dục và giao diện hiện đại`,
+        titleTop: 'Xây dựng hệ thống giáo dục',
+        titleAccent: 'bằng tư duy full-stack.',
+        description: `${siteConfig.name} là portfolio kỹ thuật cho backend Laravel/PHP, sản phẩm LMS/CMS/CRM, luồng chatbot giáo dục, giao diện Vue/Next, API an toàn và UX sẵn sàng production.`,
+        primary: 'Đọc bài viết',
+        secondary: 'Trao đổi dự án',
+        stats: [
+          { icon: Server, number: 'Laravel', label: 'Module backend, API, auth và mô hình dữ liệu.' },
+          { icon: GraduationCap, number: 'LMS / CMS', label: 'Nội dung giáo dục, quy trình admin và hệ thống CRM.' },
+          { icon: Bot, number: 'Chatbot UX', label: 'Hỗ trợ học viên, thu lead và luồng tự động hóa.' },
+        ],
+      }
+    : {
+        badge: `${siteConfig.shortName} / Laravel, education systems, and modern UI`,
+        titleTop: 'Building education systems',
+        titleAccent: 'with full-stack discipline.',
+        description: `${siteConfig.name} is a technical portfolio for Laravel/PHP backend work, LMS/CMS/CRM products, education chatbot flows, Vue/Next interfaces, secure APIs, and production-ready UX.`,
+        primary: 'Read the journal',
+        secondary: 'Discuss a build',
+        stats: [
+          { icon: Server, number: 'Laravel', label: 'Backend modules, APIs, auth, and data modeling.' },
+          { icon: GraduationCap, number: 'LMS / CMS', label: 'Education content, admin workflows, CRM systems.' },
+          { icon: Bot, number: 'Chatbot UX', label: 'Learning support, lead capture, and automation flows.' },
+        ],
+      };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -52,23 +83,22 @@ export default function HeroSection() {
         <div className="max-w-3xl">
           <motion.div variants={itemVariants} className="mb-6 inline-flex items-center gap-2 border border-[var(--line-strong)] bg-[rgba(13,18,15,0.68)] px-3 py-2 text-sm text-[var(--text-muted)]">
             <ShieldCheck size={16} className="text-[var(--accent)]" />
-            <span>{siteConfig.shortName} / Laravel, education systems, and modern UI</span>
+            <span>{copy.badge}</span>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
             className="mb-6 max-w-3xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl"
           >
-            <span className="block text-[var(--text)]">Building education systems</span>
-            <span className="gradient-text block">with full-stack discipline.</span>
+            <span className="block text-[var(--text)]">{copy.titleTop}</span>
+            <span className="gradient-text block">{copy.titleAccent}</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
             className="mb-9 max-w-2xl text-base leading-8 text-[var(--text-muted)] sm:text-lg text-balance"
           >
-            {siteConfig.name} is a technical portfolio for Laravel/PHP backend work, LMS/CMS/CRM products,
-            education chatbot flows, Vue/Next interfaces, secure APIs, and production-ready UX.
+            {copy.description}
           </motion.p>
 
           <motion.div
@@ -77,15 +107,15 @@ export default function HeroSection() {
           >
             <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
               <Button asChild size="lg" className="group">
-                <Link href="/blog">
-                  Read the journal
+                <Link href={localizedPath('/blog', locale)}>
+                  {copy.primary}
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform flex-shrink-0" />
                 </Link>
               </Button>
             </motion.div>
             <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
               <Button asChild variant="outline" size="lg" className="group">
-                <Link href="/contact">Discuss a build</Link>
+                <Link href={localizedPath('/contact', locale)}>{copy.secondary}</Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -94,11 +124,7 @@ export default function HeroSection() {
             variants={itemVariants}
             className="mt-12 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3"
           >
-            {[
-              { icon: Server, number: 'Laravel', label: 'Backend modules, APIs, auth, and data modeling.' },
-              { icon: GraduationCap, number: 'LMS / CMS', label: 'Education content, admin workflows, CRM systems.' },
-              { icon: Bot, number: 'Chatbot UX', label: 'Learning support, lead capture, and automation flows.' },
-            ].map((stat) => {
+            {copy.stats.map((stat) => {
               const Icon = stat.icon;
               return (
                 <motion.div

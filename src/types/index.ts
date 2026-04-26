@@ -24,6 +24,20 @@ export interface Comment {
   author_name: string;
   author_email?: string;
   content: string;
+  approved?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'read' | 'archived';
+  source: string;
+  user_agent?: string | null;
   created_at: string;
   updated_at: string;
 }

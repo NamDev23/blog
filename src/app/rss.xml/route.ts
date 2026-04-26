@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { canUseMockApiFallback, getMockPosts } from '@/lib/mockApi';
 import { absoluteUrl, siteConfig } from '@/lib/site';
+import { localizedUrl } from '@/lib/metadata';
 import type { Post } from '@/types';
 
 /**
@@ -41,7 +42,7 @@ export async function GET() {
     <title>${escapeXml(siteConfig.name)}</title>
     <link>${siteConfig.url}</link>
     <description>${escapeXml(siteConfig.description)}</description>
-    <language>en</language>
+    <language>vi</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${absoluteUrl('/rss.xml')}" rel="self" type="application/rss+xml"/>
     ${posts
@@ -49,8 +50,8 @@ export async function GET() {
         (post) => `
     <item>
       <title>${escapeXml(post.title)}</title>
-      <link>${absoluteUrl(`/blog/${post.slug}`)}</link>
-      <guid isPermaLink="true">${absoluteUrl(`/blog/${post.slug}`)}</guid>
+      <link>${localizedUrl(`/blog/${post.slug}`, 'vi')}</link>
+      <guid isPermaLink="true">${localizedUrl(`/blog/${post.slug}`, 'vi')}</guid>
       <description>${escapeXml(post.excerpt || '')}</description>
       <content:encoded><![CDATA[${stripUnsafeHtml(post.content || '')}]]></content:encoded>
       <pubDate>${new Date(post.published_at).toUTCString()}</pubDate>

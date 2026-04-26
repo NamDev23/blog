@@ -8,15 +8,42 @@ import PageHeader from '@/components/ui/PageHeader';
 import PostCard from '@/components/PostCard';
 import { useTags } from '@/hooks/useTags';
 import { usePosts } from '@/hooks/usePosts';
+import { useLanguage } from '@/lib/i18n';
 
 export default function TagsPage() {
+  const { locale } = useLanguage();
+  const copy = locale === 'vi'
+    ? {
+        title: 'Thẻ chủ đề',
+        description: 'Khám phá ghi chú ShadowDev theo chủ đề, stack và vấn đề kỹ thuật.',
+        allTags: 'Tất cả thẻ',
+        loadingTags: 'Đang tải thẻ...',
+        failedTags: 'Không tải được thẻ',
+        emptyTags: 'Chưa có thẻ',
+        postsTagged: 'Bài viết có thẻ',
+        clear: 'Xóa bộ lọc',
+        loadingPosts: 'Đang tải bài viết...',
+        noPosts: (tag: string) => `Không có bài viết với thẻ #${tag}`,
+      }
+    : {
+        title: 'Tags',
+        description: 'Explore ShadowDev notes by topic, stack, and engineering concern.',
+        allTags: 'All Tags',
+        loadingTags: 'Loading tags...',
+        failedTags: 'Failed to load tags',
+        emptyTags: 'No tags found',
+        postsTagged: 'Posts tagged with',
+        clear: 'Clear filter',
+        loadingPosts: 'Loading posts...',
+        noPosts: (tag: string) => `No posts found with tag #${tag}`,
+      };
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const { tags, loading: tagsLoading, error: tagsError } = useTags();
   
-  // Fetch posts filtered by selected tag
-  const { posts, loading: postsLoading } = usePosts({
-    search: selectedTag || undefined,
-  });
+  const { posts: allPosts, loading: postsLoading } = usePosts();
+  const posts = selectedTag
+    ? allPosts.filter((post) => post.tags.includes(selectedTag))
+    : [];
 
   // Get tag size based on count (for tag cloud effect)
   const getTagSize = (count: number, maxCount: number) => {
@@ -33,8 +60,8 @@ export default function TagsPage() {
     <>
       {/* Page Header */}
       <PageHeader
-        title="Tags"
-        description="Explore ShadowDev notes by topic, stack, and engineering concern."
+        title={copy.title}
+        description={copy.description}
       />
 
       {/* Tags Cloud */}
@@ -47,7 +74,7 @@ export default function TagsPage() {
           <div className="flex items-center gap-3 mb-6 sm:mb-8">
             <Hash className="text-[var(--accent)]" size={28} />
             <h2 className="text-2xl sm:text-3xl font-bold gradient-text">
-              All Tags
+              {copy.allTags}
             </h2>
           </div>
 
@@ -55,7 +82,7 @@ export default function TagsPage() {
           {tagsLoading && (
             <div className="text-center py-12">
               <Loader2 className="mx-auto text-[var(--accent)] mb-4 animate-spin" size={32} />
-              <p className="text-[var(--text-muted)] text-sm sm:text-base">Loading tags...</p>
+              <p className="text-[var(--text-muted)] text-sm sm:text-base">{copy.loadingTags}</p>
             </div>
           )}
 
@@ -64,7 +91,7 @@ export default function TagsPage() {
             <div className="text-center py-12">
               <AlertCircle className="mx-auto text-red-500 mb-4" size={32} />
               <p className="text-[var(--text-muted)] text-sm sm:text-base mb-2">
-                Failed to load tags
+                {copy.failedTags}
               </p>
               <p className="text-[var(--text-soft)] text-xs sm:text-sm">{tagsError}</p>
             </div>
@@ -103,7 +130,7 @@ export default function TagsPage() {
             <div className="text-center py-12 surface-card">
               <Tag className="mx-auto text-[var(--text-soft)] mb-4" size={32} />
               <p className="text-[var(--text-muted)] text-sm sm:text-base">
-                No tags found
+                {copy.emptyTags}
               </p>
             </div>
           )}
@@ -120,13 +147,13 @@ export default function TagsPage() {
           >
             <div className="flex items-center justify-between mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)]">
-                Posts tagged with <span className="gradient-text">#{selectedTag}</span>
+                {copy.postsTagged} <span className="gradient-text">#{selectedTag}</span>
               </h2>
               <button
                 onClick={() => setSelectedTag(null)}
                 className="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
               >
-                Clear filter
+                {copy.clear}
               </button>
             </div>
 
@@ -134,7 +161,7 @@ export default function TagsPage() {
             {postsLoading && (
               <div className="text-center py-12">
                 <Loader2 className="mx-auto text-[var(--accent)] mb-4 animate-spin" size={32} />
-                <p className="text-[var(--text-muted)] text-sm sm:text-base">Loading posts...</p>
+                <p className="text-[var(--text-muted)] text-sm sm:text-base">{copy.loadingPosts}</p>
               </div>
             )}
 
@@ -152,7 +179,7 @@ export default function TagsPage() {
               <div className="text-center py-12 surface-card">
                 <Tag className="mx-auto text-[var(--text-soft)] mb-4" size={32} />
                 <p className="text-[var(--text-muted)] text-sm sm:text-base">
-                  No posts found with tag #{selectedTag}
+                  {copy.noPosts(selectedTag)}
                 </p>
               </div>
             )}

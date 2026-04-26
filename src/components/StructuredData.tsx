@@ -1,4 +1,5 @@
-import { absoluteUrl, siteConfig } from '@/lib/site';
+import { siteConfig } from '@/lib/site';
+import { languageAlternates, localizedUrl } from '@/lib/metadata';
 
 export default function StructuredData() {
   const data = {
@@ -7,6 +8,7 @@ export default function StructuredData() {
     name: siteConfig.name,
     url: siteConfig.url,
     description: siteConfig.description,
+    inLanguage: ['vi', 'en'],
     publisher: {
       '@type': 'Organization',
       name: siteConfig.name,
@@ -15,9 +17,10 @@ export default function StructuredData() {
     },
     potentialAction: {
       '@type': 'SearchAction',
-      target: `${absoluteUrl('/blog')}?search={search_term_string}`,
+      target: `${localizedUrl('/blog', 'vi')}?search={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
+    sameAs: Object.values(languageAlternates('/')),
   };
 
   return (

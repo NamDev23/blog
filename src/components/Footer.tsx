@@ -5,9 +5,35 @@ import { Github, Linkedin, Twitter, Mail, ArrowRight, Terminal } from 'lucide-re
 import { motion } from 'framer-motion';
 import { exploreLinks } from '@/lib/navigation';
 import { siteConfig } from '@/lib/site';
+import { navigationLabels, useLanguage } from '@/lib/i18n';
+import { localizedPath } from '@/lib/locales';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { locale } = useLanguage();
+  const navLabels = navigationLabels[locale];
+  const copy = locale === 'vi'
+    ? {
+        description: 'Ghi chú kỹ thuật về giao diện bền vững, API an toàn và sản phẩm web chú trọng hiệu năng.',
+        explore: 'Khám phá',
+        contact: 'Liên hệ',
+        basedIn: 'Địa điểm',
+        signals: 'Kênh',
+        built: 'Xây dựng bằng Next.js, Supabase và tư duy UX bền vững.',
+      }
+    : {
+        description: 'Engineering notes on resilient interfaces, secure APIs, and performance-focused web products.',
+        explore: 'Explore',
+        contact: 'Contact',
+        basedIn: 'Based in',
+        signals: 'Signals',
+        built: 'Built with Next.js, Supabase, and a bias for durable UX.',
+      };
+  const localizedLinks = exploreLinks.map((link) => ({
+    ...link,
+    href: localizedPath(link.href, locale),
+    label: navLabels[link.key],
+  }));
 
   const socialLinks = [
     { icon: Github, href: '#', label: 'GitHub' },
@@ -54,14 +80,14 @@ export default function Footer() {
               <h3 className="text-lg sm:text-xl font-bold text-[var(--text)]">{siteConfig.name}</h3>
             </div>
             <p className="text-[var(--text-muted)] text-sm leading-relaxed">
-              Engineering notes on resilient interfaces, secure APIs, and performance-focused web products.
+              {copy.description}
             </p>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <h4 className="font-semibold text-[var(--text)] mb-4 text-sm sm:text-base">Explore</h4>
+            <h4 className="font-semibold text-[var(--text)] mb-4 text-sm sm:text-base">{copy.explore}</h4>
             <ul className="grid grid-cols-2 gap-x-6 gap-y-2 sm:gap-y-3">
-              {exploreLinks.map((link) => (
+              {localizedLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -77,7 +103,7 @@ export default function Footer() {
 
 
           <motion.div variants={itemVariants}>
-            <h4 className="font-semibold text-[var(--text)] mb-4 text-sm sm:text-base">Contact</h4>
+            <h4 className="font-semibold text-[var(--text)] mb-4 text-sm sm:text-base">{copy.contact}</h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
                 <a
@@ -88,12 +114,12 @@ export default function Footer() {
                   {siteConfig.email}
                 </a>
               </li>
-              <li className="text-[var(--text-muted)] text-sm">Based in {siteConfig.location}</li>
+              <li className="text-[var(--text-muted)] text-sm">{copy.basedIn} {siteConfig.location}</li>
             </ul>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <h4 className="font-semibold text-[var(--text)] mb-4 text-sm sm:text-base">Signals</h4>
+            <h4 className="font-semibold text-[var(--text)] mb-4 text-sm sm:text-base">{copy.signals}</h4>
             <div className="flex gap-3 flex-wrap">
               {socialLinks.map((social) => {
                 const Icon = social.icon;
@@ -123,7 +149,7 @@ export default function Footer() {
           className="border-t border-[var(--line)] pt-8 sm:pt-12"
         >
           <p className="text-center text-[var(--text-soft)] text-xs sm:text-sm">
-            © {currentYear} {siteConfig.name}. Built with Next.js, Supabase, and a bias for durable UX.
+            © {currentYear} {siteConfig.name}. {copy.built}
           </p>
         </motion.div>
       </div>

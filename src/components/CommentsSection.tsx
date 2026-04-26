@@ -5,6 +5,7 @@ import { MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useComments } from '@/hooks/useComments';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
+import { useLanguage } from '@/lib/i18n';
 
 interface CommentsSectionProps {
   postId: string;
@@ -14,6 +15,22 @@ interface CommentsSectionProps {
  * Section hiển thị comments và form
  */
 export default function CommentsSection({ postId }: CommentsSectionProps) {
+  const { locale } = useLanguage();
+  const copy = locale === 'vi'
+    ? {
+        title: 'Bình luận',
+        loading: 'Đang tải bình luận...',
+        failed: 'Không tải được bình luận',
+        count: (count: number) => `${count} bình luận`,
+        empty: 'Chưa có bình luận. Hãy là người đầu tiên bình luận.',
+      }
+    : {
+        title: 'Comments',
+        loading: 'Loading comments...',
+        failed: 'Failed to load comments',
+        count: (count: number) => `${count} ${count === 1 ? 'comment' : 'comments'}`,
+        empty: 'No comments yet. Be the first to comment!',
+      };
   const { comments, loading, error, refetch } = useComments({
     postId,
     approved: true, // Chỉ hiển thị comments đã được approve
@@ -31,16 +48,16 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
         <div className="flex items-center gap-3 mb-2">
           <MessageCircle className="text-[var(--accent)]" size={28} />
           <h2 className="text-2xl sm:text-3xl font-bold gradient-text">
-            Comments
+            {copy.title}
           </h2>
         </div>
         <p className="text-[var(--text-muted)] text-sm sm:text-base">
           {loading ? (
-            'Loading comments...'
+            copy.loading
           ) : error ? (
-            'Failed to load comments'
+            copy.failed
           ) : (
-            `${comments.length} ${comments.length === 1 ? 'comment' : 'comments'}`
+            copy.count(comments.length)
           )}
         </p>
       </motion.div>
@@ -55,7 +72,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
             className="text-center py-8"
           >
             <Loader2 className="mx-auto text-[var(--accent)] mb-3 animate-spin" size={32} />
-            <p className="text-[var(--text-muted)] text-sm sm:text-base">Loading comments...</p>
+            <p className="text-[var(--text-muted)] text-sm sm:text-base">{copy.loading}</p>
           </motion.div>
         )}
 
@@ -68,7 +85,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
           >
             <AlertCircle className="mx-auto text-red-500 mb-3" size={32} />
             <p className="text-[var(--text-muted)] text-sm sm:text-base mb-2">
-              Failed to load comments
+              {copy.failed}
             </p>
             <p className="text-[var(--text-soft)] text-xs sm:text-sm">{error}</p>
           </motion.div>
@@ -92,7 +109,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
           >
             <MessageCircle className="mx-auto text-[var(--text-soft)] mb-3" size={32} />
             <p className="text-[var(--text-muted)] text-sm sm:text-base">
-              No comments yet. Be the first to comment!
+              {copy.empty}
             </p>
           </motion.div>
         )}

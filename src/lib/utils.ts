@@ -5,18 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date, locale = 'en-US'): string {
   const d = new Date(date);
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   };
-  return d.toLocaleDateString('en-US', options);
+  return d.toLocaleDateString(locale, options);
 }
 
 export function slugify(text: string): string {
   return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
@@ -58,4 +62,3 @@ export function formatReadingTime(minutes: number): string {
   if (minutes === 1) return '1 min read';
   return `${minutes} min read`;
 }
-

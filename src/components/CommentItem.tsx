@@ -3,7 +3,7 @@
 import { Comment } from '@/types';
 import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatLocalizedDate, useLanguage } from '@/lib/i18n';
 
 interface CommentItemProps {
   comment: Comment;
@@ -14,6 +14,7 @@ interface CommentItemProps {
  * Component hiển thị một comment
  */
 export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
+  const { locale } = useLanguage();
   // Get initials from author name
   const getInitials = (name: string) => {
     return name
@@ -65,7 +66,7 @@ export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
             <div className="flex items-center gap-1.5 text-[var(--text-soft)] text-xs sm:text-sm">
               <Calendar size={14} className="flex-shrink-0" />
               <time dateTime={comment.created_at}>
-                {formatDate(comment.created_at)}
+                {formatLocalizedDate(comment.created_at, locale)}
               </time>
             </div>
           </div>

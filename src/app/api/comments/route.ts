@@ -9,6 +9,10 @@ import {
   hasAdminAccess,
   jsonResponse,
   PUBLIC_COMMENT_SELECT,
+  rateLimit,
+  requireSafeRequestOrigin,
+  clampLimit,
+  clampPage,
   sanitizeLongText,
   sanitizeText,
 } from '@/lib/security';
@@ -28,6 +32,10 @@ export async function GET(request: NextRequest) {
     const postId = searchParams.get('post_id');
     const approved = searchParams.get('approved');
     const isAdmin = hasAdminAccess(request);
+    const page = clampPage(searchParams.get('page'));
+    const limit = clampLimit(searchParams.get('limit'), isAdmin ? 12 : 24, isAdmin ? 100 : 48);
+    const withMeta = searchParams.get('meta') === 'true';
+    const offset = (page - 1) * limit;
 
     if (isAdmin) {
       const unavailable = ensureSupabaseConfigured(true);
@@ -46,8 +54,9 @@ export async function GET(request: NextRequest) {
     // Bắt đầu query
     let query = client
       .from('comments')
-      .select(isAdmin ? '*' : PUBLIC_COMMENT_SELECT)
-      .order('created_at', { ascending: false });
+      .select(isAdmin ? '*' : PUBLIC_COMMENT_SELECT, withMeta ? { count: 'exact' } : undefined)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     // Lọc theo post_id nếu có
     if (postId) {
@@ -58,22 +67,40 @@ export async function GET(request: NextRequest) {
     if (isAdmin && approved !== null) {
       const isApproved = approved === 'true';
       query = query.eq('approved', isApproved);
-    } else {
+    } else if (!isAdmin) {
       query = query.eq('approved', true);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     if (error) {
       console.error('Supabase error:', error);
-      return supabaseFailureResponse(error);
+      return jsonResponse(
+        { code: 'comment_storage_unavailable', error: 'Comment storage is temporarily unavailable.' },
+        { status: 503 },
+        'private, no-store'
+      );
     }
 
-    return jsonResponse(
-      data || [],
-      {},
-      isAdmin ? 'private, no-store' : 'public, max-age=30, s-maxage=180, stale-while-revalidate=300'
-    );
+    const cacheControl = isAdmin ? 'private, no-store' : 'public, max-age=30, s-maxage=180, stale-while-revalidate=300';
+
+    if (withMeta) {
+      return jsonResponse(
+        {
+          data: data || [],
+          pagination: {
+            page,
+            limit,
+            total: count || 0,
+            totalPages: Math.max(1, Math.ceil((count || 0) / limit)),
+          },
+        },
+        {},
+        cacheControl
+      );
+    }
+
+    return jsonResponse(data || [], {}, cacheControl);
   } catch (error) {
     console.error('API error:', error);
     if (!hasAdminAccess(request) && canUseMockApiFallback()) {
@@ -91,6 +118,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const invalidOrigin = requireSafeRequestOrigin(request);
+    if (invalidOrigin) return invalidOrigin;
+
+    const limited = rateLimit(request, 'comment-create', 10, 10 * 60 * 1000);
+    if (limited) return limited;
+
     const unavailable = ensureSupabaseConfigured(false);
     if (unavailable) return unavailable;
 
@@ -104,8 +137,12 @@ export async function POST(request: NextRequest) {
 
     if (!post_id || !author_name || !author_email || !content) {
       return jsonResponse(
-        { error: 'Missing required fields: post_id, author_name, author_email, content' },
-        { status: 400 }
+        {
+          code: 'invalid_comment_payload',
+          error: 'Missing required fields: post_id, author_name, author_email, content',
+        },
+        { status: 400 },
+        'private, no-store'
       );
     }
 
@@ -113,21 +150,24 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailRegex.test(author_email)) {
       return jsonResponse(
-        { error: 'Invalid email format' },
-        { status: 400 }
+        { code: 'invalid_email', error: 'Invalid email format' },
+        { status: 400 },
+        'private, no-store'
       );
     }
 
     // Validate content length
     if (content.trim().length < 3) {
       return jsonResponse(
-        { error: 'Comment must be at least 3 characters long' },
-        { status: 400 }
+        { code: 'comment_too_short', error: 'Comment must be at least 3 characters long' },
+        { status: 400 },
+        'private, no-store'
       );
     }
 
     // Insert comment (approved = false by default)
-    const { data, error } = await supabase
+    const writeClient = isSupabaseAdminConfigured ? supabaseAdmin : supabase;
+    const { data, error } = await writeClient
       .from('comments')
       .insert([{
         post_id,
@@ -152,6 +192,7 @@ export async function POST(request: NextRequest) {
         content: data.content,
         created_at: data.created_at,
         updated_at: data.updated_at,
+        code: 'comment_pending_review',
         message: 'Comment submitted successfully. It will be visible after approval.'
       },
       { status: 201 }

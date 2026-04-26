@@ -20,6 +20,8 @@ import {
 import Button from '@/components/ui/Button';
 import Section from '@/components/ui/Section';
 import { siteConfig } from '@/lib/site';
+import { useLanguage } from '@/lib/i18n';
+import { localizedPath } from '@/lib/locales';
 
 const strengths = [
   {
@@ -117,6 +119,163 @@ const interviewPoints = [
 ];
 
 export default function ResumePage() {
+  const { locale } = useLanguage();
+  const copy = locale === 'vi'
+    ? {
+        eyebrow: 'Hồ sơ phỏng vấn',
+        title: 'Full-stack developer cho hệ thống giáo dục.',
+        subtitle: 'Sản phẩm CMS/CRM, luồng chatbot và giao diện frontend hiện đại.',
+        badges: ['Backend Laravel', 'Education SaaS', 'UX CMS/CRM', 'UI Vue / Next'],
+        description:
+          `${siteConfig.name} được định vị như một CV sống: trình bày kinh nghiệm backend Laravel/PHP, tư duy sản phẩm LMS/CMS/CRM, chatbot giáo dục và năng lực giao diện Vue.js hoặc Next.js chỉn chu.`,
+        projectMap: 'Xem bản đồ dự án',
+        print: 'In hồ sơ',
+        corePositioning: 'Định vị cốt lõi',
+        imageTitle: 'Education SaaS + Full-stack Delivery',
+        facts: [
+          ['Backend', 'PHP, Laravel, APIs'],
+          ['Sản phẩm', 'LMS, CMS, CRM'],
+          ['Frontend', 'Vue.js, Next.js, React'],
+          ['Domain', 'Luồng chatbot giáo dục'],
+        ],
+        capabilityEyebrow: 'Bản đồ năng lực',
+        capabilityTitle: 'Điều hồ sơ nên truyền tải đầu tiên.',
+        systemEyebrow: 'Hệ thống sản phẩm',
+        systemTitle: 'Kinh nghiệm được sắp xếp theo loại hệ thống.',
+        systemDescription:
+          'Cấu trúc này thân thiện với phỏng vấn vì ánh xạ kỹ năng vào sản phẩm mà công ty dễ nhận ra: nền tảng giáo dục, vận hành nội dung, vận hành khách hàng và tự động hóa.',
+        stackEyebrow: 'Technical Stack',
+        stackTitle: 'Kỹ năng được nhóm để đọc nhanh.',
+        proofEyebrow: 'Bằng chứng',
+        proofTitle: 'Những điểm cụ thể để trình bày trong phỏng vấn kỹ thuật.',
+        scriptEyebrow: 'Kịch bản phỏng vấn',
+        scriptTitle: 'Dùng website này làm walkthrough kỹ thuật.',
+        strengths: [
+          {
+            icon: Server,
+            label: 'PHP / Laravel',
+            detail: 'Backend API, auth, mô hình dữ liệu, workflow admin, logic CMS và module nghiệp vụ dễ bảo trì.',
+          },
+          {
+            icon: GraduationCap,
+            label: 'Hệ thống giáo dục',
+            detail: 'Luồng LMS, cấu trúc khóa học, tiến độ học viên, vận hành nội dung và tư duy sản phẩm giáo dục.',
+          },
+          {
+            icon: LayoutDashboard,
+            label: 'CMS / CRM',
+            detail: 'Quản lý nội dung, hồ sơ khách hàng/học viên, dashboard, bộ lọc, role và màn hình vận hành.',
+          },
+          {
+            icon: Code2,
+            label: 'UI Vue / Next',
+            detail: 'Giao diện hiện đại với Vue.js, Next.js, React, TypeScript, Tailwind CSS và UX responsive.',
+          },
+        ],
+        systemExperience: [
+          {
+            icon: GraduationCap,
+            title: 'Nền tảng LMS',
+            detail: 'Catalog khóa học, trang bài học, trạng thái ghi danh, tiến độ, đánh giá và luồng học tập theo role.',
+          },
+          {
+            icon: Database,
+            title: 'Sản phẩm CMS',
+            detail: 'Mô hình bài viết, danh mục, tag, trạng thái publish, media field, admin form và cấu trúc SEO-friendly.',
+          },
+          {
+            icon: Workflow,
+            title: 'Workflow CRM',
+            detail: 'Hồ sơ lead/học viên, pipeline trạng thái, màn hình search/filter, report và vận hành staff lặp lại.',
+          },
+          {
+            icon: Bot,
+            title: 'Chatbot giáo dục',
+            detail: 'Luồng hỗ trợ câu hỏi khóa học, thu lead, hỗ trợ học tập, FAQ automation và messaging giáo dục.',
+          },
+        ],
+        skillGroups: [
+          {
+            title: 'Backend',
+            items: ['PHP', 'Laravel', 'REST APIs', 'Auth', 'MySQL', 'PostgreSQL'],
+          },
+          {
+            title: 'Frontend',
+            items: ['Vue.js', 'Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Responsive UI'],
+          },
+          {
+            title: 'Hệ thống sản phẩm',
+            items: ['LMS', 'CMS', 'CRM', 'Admin dashboards', 'Education workflows', 'Chatbot flows'],
+          },
+          {
+            title: 'Production',
+            items: ['SEO', 'Bảo mật', 'Hiệu năng', 'Supabase', 'Content modeling', 'UX writing'],
+          },
+        ],
+        proof: [
+          {
+            title: 'Kinh nghiệm sản phẩm giáo dục',
+            meta: 'LMS / Chatbot',
+            detail: 'Có thể trình bày workflow giáo dục thật: hành trình học viên, delivery nội dung, tự động hóa và hỗ trợ.',
+          },
+          {
+            title: 'Tư duy hệ thống nghiệp vụ',
+            meta: 'CMS / CRM',
+            detail: 'Có thể giải thích màn hình admin, quan hệ dữ liệu, role, filter, record và use case vận hành hằng ngày.',
+          },
+          {
+            title: 'Triển khai full-stack',
+            meta: 'Laravel / API / UI',
+            detail: 'Có thể nối logic backend và UX frontend thay vì xem giao diện như lớp tách rời.',
+          },
+          {
+            title: 'ShadowDev làm bằng chứng',
+            meta: 'Next.js / CMS',
+            detail: 'Dự án này chứng minh admin login, blog publishing, SEO, responsive UI và API hardening.',
+          },
+        ],
+        interviewPoints: [
+          'Walk through một feature LMS từ database model tới màn hình học viên.',
+          'Giải thích CMS/CRM admin interface nên hỗ trợ staff làm việc lặp lại thế nào.',
+          'So sánh trách nhiệm backend Laravel với frontend Vue.js hoặc Next.js.',
+          'Trình bày ShadowDev admin login, luồng đăng bài CMS, protected API route và cấu trúc SEO.',
+        ],
+      }
+    : {
+        eyebrow: 'Interview Profile',
+        title: 'Full-stack developer for education systems.',
+        subtitle: 'CMS/CRM products, chatbot flows, and modern frontend interfaces.',
+        badges: ['Laravel backend', 'Education SaaS', 'CMS/CRM UX', 'Vue / Next UI'],
+        description:
+          `${siteConfig.name} is positioned as a live CV: it presents Laravel/PHP backend experience, LMS/CMS/CRM product thinking, education chatbot work, and polished Vue.js or Next.js interface capability.`,
+        projectMap: 'View project map',
+        print: 'Print profile',
+        corePositioning: 'Core Positioning',
+        imageTitle: 'Education SaaS + Full-stack Delivery',
+        facts: [
+          ['Backend', 'PHP, Laravel, APIs'],
+          ['Products', 'LMS, CMS, CRM'],
+          ['Frontend', 'Vue.js, Next.js, React'],
+          ['Domain', 'Education chatbot flows'],
+        ],
+        capabilityEyebrow: 'Capability Map',
+        capabilityTitle: 'What your profile should communicate first.',
+        systemEyebrow: 'Product Systems',
+        systemTitle: 'Experience arranged by system type.',
+        systemDescription:
+          'This structure is interview-friendly because it maps your skills to products companies recognize: education platforms, content operations, customer operations, and automation.',
+        stackEyebrow: 'Technical Stack',
+        stackTitle: 'Skills grouped for quick scanning.',
+        proofEyebrow: 'Proof Points',
+        proofTitle: 'Concrete things to show during a technical interview.',
+        scriptEyebrow: 'Interview Script',
+        scriptTitle: 'Use this site as your technical walkthrough.',
+        strengths,
+        systemExperience,
+        skillGroups,
+        proof,
+        interviewPoints,
+      };
   return (
     <>
       <Section className="relative overflow-hidden border-b border-[var(--line)] bg-[rgba(244,241,232,0.025)]">
@@ -128,35 +287,34 @@ export default function ResumePage() {
           >
             <div className="micro-label mb-4 flex items-center gap-2">
               <BriefcaseBusiness size={15} />
-              Interview Profile
+              {copy.eyebrow}
             </div>
             <h1 className="max-w-3xl text-2xl font-bold leading-tight text-[var(--text)] sm:text-3xl lg:text-4xl">
-              Full-stack developer for education systems.
+              {copy.title}
               <span className="mt-2 block text-xl leading-snug text-[var(--text-muted)] sm:text-2xl lg:text-3xl">
-                CMS/CRM products, chatbot flows, and modern frontend interfaces.
+                {copy.subtitle}
               </span>
             </h1>
             <div className="mt-5 flex flex-wrap gap-2">
-              {['Laravel backend', 'Education SaaS', 'CMS/CRM UX', 'Vue / Next UI'].map((item) => (
+              {copy.badges.map((item) => (
                 <span key={item} className="rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.05)] px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)]">
                   {item}
                 </span>
               ))}
             </div>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-              {siteConfig.name} is positioned as a live CV: it presents Laravel/PHP backend experience, LMS/CMS/CRM
-              product thinking, education chatbot work, and polished Vue.js or Next.js interface capability.
+              {copy.description}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link href="/projects">
-                  View project map
+                <Link href={localizedPath('/projects', locale)}>
+                  {copy.projectMap}
                   <ArrowRight size={18} />
                 </Link>
               </Button>
               <Button type="button" variant="outline" size="lg" onClick={() => window.print()}>
                 <Printer size={18} />
-                Print profile
+                {copy.print}
               </Button>
             </div>
           </motion.div>
@@ -178,17 +336,12 @@ export default function ResumePage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0d120f] via-[#0d120f]/30 to-transparent" />
               <div className="absolute bottom-4 left-4 right-4">
-                <p className="micro-label mb-2">Core Positioning</p>
-                <h2 className="text-2xl font-semibold text-[var(--text)]">Education SaaS + Full-stack Delivery</h2>
+                <p className="micro-label mb-2">{copy.corePositioning}</p>
+                <h2 className="text-2xl font-semibold text-[var(--text)]">{copy.imageTitle}</h2>
               </div>
             </div>
             <dl className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
-              {[
-                ['Backend', 'PHP, Laravel, APIs'],
-                ['Products', 'LMS, CMS, CRM'],
-                ['Frontend', 'Vue.js, Next.js, React'],
-                ['Domain', 'Education chatbot flows'],
-              ].map(([label, value]) => (
+              {copy.facts.map(([label, value]) => (
                 <div key={label} className="rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.035)] p-4">
                   <dt className="text-xs uppercase text-[var(--text-soft)]">{label}</dt>
                   <dd className="mt-1 text-sm font-semibold text-[var(--text)]">{value}</dd>
@@ -203,12 +356,12 @@ export default function ResumePage() {
         <div className="mb-10 max-w-3xl">
           <div className="micro-label mb-3 flex items-center gap-2">
             <Gauge size={15} />
-            Capability Map
+            {copy.capabilityEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">What your profile should communicate first.</h2>
+          <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">{copy.capabilityTitle}</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {strengths.map((item, index) => {
+          {copy.strengths.map((item, index) => {
             const Icon = item.icon;
             return (
               <motion.article
@@ -235,16 +388,15 @@ export default function ResumePage() {
           <div>
             <div className="micro-label mb-3 flex items-center gap-2">
               <LayoutDashboard size={15} />
-              Product Systems
+              {copy.systemEyebrow}
             </div>
-            <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">Experience arranged by system type.</h2>
+            <h2 className="text-3xl font-bold text-[var(--text)] sm:text-4xl">{copy.systemTitle}</h2>
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
-              This structure is interview-friendly because it maps your skills to products companies recognize:
-              education platforms, content operations, customer operations, and automation.
+              {copy.systemDescription}
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {systemExperience.map((item, index) => {
+            {copy.systemExperience.map((item, index) => {
               const Icon = item.icon;
               return (
                 <motion.article
@@ -271,12 +423,12 @@ export default function ResumePage() {
         <div className="mb-10 max-w-3xl">
           <div className="micro-label mb-3 flex items-center gap-2">
             <Code2 size={15} />
-            Technical Stack
+            {copy.stackEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)]">Skills grouped for quick scanning.</h2>
+          <h2 className="text-3xl font-bold text-[var(--text)]">{copy.stackTitle}</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {skillGroups.map((group) => (
+          {copy.skillGroups.map((group) => (
             <article key={group.title} className="surface-card p-5">
               <h3 className="text-lg font-semibold text-[var(--text)]">{group.title}</h3>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -295,12 +447,12 @@ export default function ResumePage() {
         <div className="mb-10 max-w-3xl">
           <div className="micro-label mb-3 flex items-center gap-2">
             <ShieldCheck size={15} />
-            Proof Points
+            {copy.proofEyebrow}
           </div>
-          <h2 className="text-3xl font-bold text-[var(--text)]">Concrete things to show during a technical interview.</h2>
+          <h2 className="text-3xl font-bold text-[var(--text)]">{copy.proofTitle}</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          {proof.map((item, index) => (
+          {copy.proof.map((item, index) => (
             <motion.article
               key={item.title}
               initial={{ opacity: 0, y: 18 }}
@@ -320,11 +472,11 @@ export default function ResumePage() {
       <Section withDividerTop>
         <div className="surface-card grid gap-6 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="micro-label mb-3">Interview Script</p>
-            <h2 className="text-2xl font-bold text-[var(--text)] sm:text-3xl">Use this site as your technical walkthrough.</h2>
+            <p className="micro-label mb-3">{copy.scriptEyebrow}</p>
+            <h2 className="text-2xl font-bold text-[var(--text)] sm:text-3xl">{copy.scriptTitle}</h2>
           </div>
           <ul className="space-y-3">
-            {interviewPoints.map((point) => (
+            {copy.interviewPoints.map((point) => (
               <li key={point} className="flex gap-3 text-sm leading-relaxed text-[var(--text-muted)]">
                 <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" />
                 <span>{point}</span>

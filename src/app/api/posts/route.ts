@@ -5,7 +5,7 @@ import {
   supabase,
   supabaseAdmin,
 } from '@/lib/supabase';
-import { clampLimit, hasAdminAccess, jsonResponse, requireAdmin, sanitizeSearch } from '@/lib/security';
+import { clampLimit, clampPage, hasAdminAccess, jsonResponse, requireAdmin, sanitizeSearch } from '@/lib/security';
 import { parsePostPayload } from '@/lib/postPayload';
 import { canUseMockApiFallback, getMockPosts } from '@/lib/mockApi';
 import { ensureSupabaseConfigured, supabaseFailureResponse } from '@/lib/supabaseRoute';
@@ -24,8 +24,12 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const search = sanitizeSearch(searchParams.get('search'));
     const limit = searchParams.get('limit');
+    const page = clampPage(searchParams.get('page'));
+    const withMeta = searchParams.get('meta') === 'true';
+    const status = searchParams.get('status');
     const isAdmin = hasAdminAccess(request);
-    const limitNumber = limit ? clampLimit(limit) : undefined;
+    const limitNumber = limit ? clampLimit(limit, 24, isAdmin ? 100 : 48) : undefined;
+    const offset = limitNumber ? (page - 1) * limitNumber : 0;
 
     if (isAdmin) {
       const unavailable = ensureSupabaseConfigured(true);
@@ -48,13 +52,17 @@ export async function GET(request: NextRequest) {
     // Bắt đầu query
     let query = client
       .from('posts')
-      .select('*')
+      .select('*', withMeta ? { count: 'exact' } : undefined)
       .order('published_at', { ascending: false });
 
     if (!isAdmin) {
       query = query
         .not('published_at', 'is', null)
         .lte('published_at', new Date().toISOString());
+    } else if (status === 'published') {
+      query = query.not('published_at', 'is', null);
+    } else if (status === 'draft') {
+      query = query.is('published_at', null);
     }
 
     // Lọc theo category nếu có
@@ -69,10 +77,10 @@ export async function GET(request: NextRequest) {
 
     // Giới hạn số lượng nếu có
     if (limitNumber) {
-      query = query.limit(limitNumber);
+      query = query.range(offset, offset + limitNumber - 1);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     if (error) {
       if (!isAdmin && canUseMockApiFallback()) {
@@ -91,11 +99,25 @@ export async function GET(request: NextRequest) {
       return supabaseFailureResponse(error);
     }
 
-    return jsonResponse(
-      data || [],
-      {},
-      isAdmin ? 'private, no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-    );
+    const cacheControl = isAdmin ? 'private, no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600';
+
+    if (withMeta && limitNumber) {
+      return jsonResponse(
+        {
+          data: data || [],
+          pagination: {
+            page,
+            limit: limitNumber,
+            total: count || 0,
+            totalPages: Math.max(1, Math.ceil((count || 0) / limitNumber)),
+          },
+        },
+        {},
+        cacheControl
+      );
+    }
+
+    return jsonResponse(data || [], {}, cacheControl);
   } catch (error) {
     console.error('API error:', error);
     if (!hasAdminAccess(request) && canUseMockApiFallback()) {

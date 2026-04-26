@@ -6,6 +6,22 @@ export const PUBLIC_COMMENT_SELECT =
 export const ADMIN_SESSION_COOKIE = 'shadowdev_admin_session';
 
 const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 8;
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+type RateLimitRecord = {
+  count: number;
+  resetAt: number;
+};
+
+const globalRateLimitStore = globalThis as typeof globalThis & {
+  __shadowdevRateLimitStore?: Map<string, RateLimitRecord>;
+};
+
+const rateLimitStore =
+  globalRateLimitStore.__shadowdevRateLimitStore ||
+  new Map<string, RateLimitRecord>();
+
+globalRateLimitStore.__shadowdevRateLimitStore = rateLimitStore;
 
 export function sanitizeText(value: unknown, maxLength: number) {
   if (typeof value !== 'string') return '';
@@ -35,6 +51,81 @@ export function clampLimit(value: string | null, fallback = 24, max = 48) {
   const parsed = Number.parseInt(value || '', 10);
   if (Number.isNaN(parsed)) return fallback;
   return Math.min(Math.max(parsed, 1), max);
+}
+
+export function clampPage(value: string | null, fallback = 1) {
+  const parsed = Number.parseInt(value || '', 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.max(parsed, 1);
+}
+
+export function rateLimit(
+  request: NextRequest,
+  scope: string,
+  limit: number,
+  windowMs: number
+) {
+  const now = Date.now();
+  const clientIp = getClientIp(request);
+  const key = `${scope}:${clientIp}`;
+  const current = rateLimitStore.get(key);
+
+  if (!current || current.resetAt <= now) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+    return null;
+  }
+
+  current.count += 1;
+
+  if (current.count <= limit) {
+    return null;
+  }
+
+  const retryAfter = Math.ceil((current.resetAt - now) / 1000);
+  return jsonResponse(
+    { code: 'rate_limited', error: 'Too many requests. Please try again later.' },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(retryAfter),
+      },
+    },
+    'private, no-store'
+  );
+}
+
+export function requireSafeRequestOrigin(request: NextRequest) {
+  if (SAFE_METHODS.has(request.method)) return null;
+
+  const secFetchSite = request.headers.get('sec-fetch-site');
+  if (secFetchSite === 'cross-site') {
+    return jsonResponse({ code: 'invalid_origin', error: 'Invalid request origin' }, { status: 403 }, 'private, no-store');
+  }
+
+  const origin = request.headers.get('origin');
+  if (!origin) return null;
+
+  const allowedHosts = new Set<string>();
+  const host = request.headers.get('host');
+  if (host) allowedHosts.add(host);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) {
+    try {
+      allowedHosts.add(new URL(siteUrl).host);
+    } catch {
+      // Ignore invalid environment values; they are reported elsewhere.
+    }
+  }
+
+  try {
+    const originHost = new URL(origin).host;
+    if (allowedHosts.has(originHost)) return null;
+  } catch {
+    return jsonResponse({ code: 'invalid_origin', error: 'Invalid request origin' }, { status: 403 }, 'private, no-store');
+  }
+
+  return jsonResponse({ code: 'invalid_origin', error: 'Invalid request origin' }, { status: 403 }, 'private, no-store');
 }
 
 export function hasAdminAccess(request: NextRequest) {
@@ -102,7 +193,7 @@ export function setAdminSessionCookie(response: NextResponse, token: string, exp
     value: token,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
     expires: new Date(expiresAt * 1000),
   });
@@ -114,17 +205,20 @@ export function clearAdminSessionCookie(response: NextResponse) {
     value: '',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
     maxAge: 0,
   });
 }
 
 export function requireAdmin(request: NextRequest) {
+  const invalidOrigin = requireSafeRequestOrigin(request);
+  if (invalidOrigin) return invalidOrigin;
+
   if (hasAdminAccess(request)) return null;
 
   return NextResponse.json(
-    { error: 'Admin authorization required' },
+    { code: 'admin_required', error: 'Admin authorization required' },
     { status: 401 }
   );
 }
@@ -160,4 +254,16 @@ function signAdminSession(payload: string) {
   if (!secret) return '';
 
   return createHmac('sha256', secret).update(payload).digest('base64url');
+}
+
+function getClientIp(request: NextRequest) {
+  const forwardedFor = request.headers.get('x-forwarded-for') || '';
+  const firstForwardedIp = forwardedFor.split(',')[0]?.trim();
+
+  return (
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-real-ip') ||
+    firstForwardedIp ||
+    'unknown'
+  );
 }

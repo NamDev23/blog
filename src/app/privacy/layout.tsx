@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
+import { generatePrivacyMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | ShadowDev",
-  description: "Read the ShadowDev privacy policy and how your data is handled on this site.",
-};
+export const metadata: Metadata = generatePrivacyMetadata();
 
 export default function PrivacyLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;

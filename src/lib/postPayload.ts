@@ -1,4 +1,5 @@
 import { sanitizeLongText, sanitizeText } from '@/lib/security';
+import { sanitizeHtmlContent } from '@/lib/htmlSanitizer';
 import { slugify } from '@/lib/utils';
 
 const DEFAULT_AUTHOR_ID =
@@ -118,12 +119,7 @@ export function parsePostPayload(body: unknown, partial = false) {
 }
 
 function sanitizePostHtml(value: unknown) {
-  return sanitizeLongText(value, 100000)
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
-    .replace(/\son\w+=(["']).*?\1/gi, '')
-    .replace(/\son\w+=\S+/gi, '')
-    .replace(/\s(href|src)=(["'])javascript:[\s\S]*?\2/gi, ' $1="#"');
+  return sanitizeHtmlContent(value, 100000);
 }
 
 function parseTags(value: unknown) {

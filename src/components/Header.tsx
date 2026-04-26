@@ -2,16 +2,29 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import { exploreLinks } from '@/lib/navigation';
 import { siteConfig } from '@/lib/site';
+import { commonCopy, navigationLabels, useLanguage } from '@/lib/i18n';
+import { localizedPath, stripLocaleFromPathname, switchLocalePath } from '@/lib/locales';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { locale, setLocale } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  const activePathname = stripLocaleFromPathname(pathname || '/');
+  const navLabels = navigationLabels[locale];
+  const copy = commonCopy[locale];
+  const localizedLinks = exploreLinks.map((item) => ({
+    ...item,
+    label: navLabels[item.key],
+    href: localizedPath(item.href, locale),
+  }));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,8 +34,10 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  const pathname = usePathname();
-
+  const changeLocale = (nextLocale: typeof locale) => {
+    setLocale(nextLocale);
+    router.push(switchLocalePath(pathname || '/', nextLocale));
+  };
 
   const mobileMenuVariants = {
     hidden: { opacity: 0, y: -10 },
@@ -48,7 +63,7 @@ export default function Header() {
     >
       <nav className="container-custom py-3">
         <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
+          <Link href={localizedPath('/', locale)} className="flex items-center gap-2 group flex-shrink-0">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -62,8 +77,10 @@ export default function Header() {
           </Link>
 
           <div className="hidden lg:flex items-center gap-1 surface-card-subtle p-1">
-            {exploreLinks.map((item) => {
-              const active = item.href === '/' ? pathname === item.href : pathname.startsWith(item.href);
+            {localizedLinks.map((item) => {
+              const active = item.href === localizedPath('/', locale)
+                ? activePathname === '/'
+                : activePathname.startsWith(stripLocaleFromPathname(item.href));
               return (
                 <Link
                   key={item.href}
@@ -77,9 +94,26 @@ export default function Header() {
             })}
           </div>
 
-          <div className="hidden lg:block flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+            <div className="flex rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.04)] p-1" aria-label={copy.language}>
+              {(['vi', 'en'] as const).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => changeLocale(item)}
+                  aria-pressed={locale === item}
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                    locale === item
+                      ? 'bg-[rgba(102,217,194,0.16)] text-[var(--accent)]'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  }`}
+                >
+                  {item.toUpperCase()}
+                </button>
+              ))}
+            </div>
             <Button asChild className="px-4 lg:px-6">
-              <Link href="/contact">Start a brief</Link>
+              <Link href={localizedPath('/contact', locale)}>{copy.startBrief}</Link>
             </Button>
           </div>
 
@@ -104,8 +138,10 @@ export default function Header() {
               className="lg:hidden mt-4 pb-4 border-t border-[var(--line)] pt-4"
             >
               <div className="flex flex-col gap-2">
-                {exploreLinks.map((item) => {
-                  const active = item.href === '/' ? pathname === item.href : pathname.startsWith(item.href);
+                {localizedLinks.map((item) => {
+                  const active = item.href === localizedPath('/', locale)
+                    ? activePathname === '/'
+                    : activePathname.startsWith(stripLocaleFromPathname(item.href));
                   return (
                   <Link
                     key={item.href}
@@ -123,8 +159,25 @@ export default function Header() {
                   );
                 })}
               </div>
+              <div className="mt-4 flex rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.04)] p-1" aria-label={copy.language}>
+                {(['vi', 'en'] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => changeLocale(item)}
+                    aria-pressed={locale === item}
+                    className={`flex-1 rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                      locale === item
+                        ? 'bg-[rgba(102,217,194,0.16)] text-[var(--accent)]'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    {item.toUpperCase()}
+                  </button>
+                ))}
+              </div>
               <Button asChild className="w-full mt-4">
-                <Link href="/contact" onClick={() => setIsOpen(false)}>Start a brief</Link>
+                <Link href={localizedPath('/contact', locale)} onClick={() => setIsOpen(false)}>{copy.startBrief}</Link>
               </Button>
             </motion.div>
           )}

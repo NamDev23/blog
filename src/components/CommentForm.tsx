@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { useLanguage } from '@/lib/i18n';
 
 interface CommentFormProps {
   postId: string;
@@ -15,6 +16,56 @@ interface CommentFormProps {
  * Form để thêm comment mới
  */
 export default function CommentForm({ postId, onCommentAdded }: CommentFormProps) {
+  const { locale } = useLanguage();
+  const copy = locale === 'vi'
+    ? {
+        title: 'Để lại bình luận',
+        successTitle: 'Gửi bình luận thành công.',
+        successDescription: 'Bình luận của bạn sẽ hiển thị sau khi được duyệt.',
+        failedTitle: 'Không gửi được bình luận',
+        requiredName: 'Tên',
+        email: 'Email',
+        comment: 'Bình luận',
+        namePlaceholder: 'Tên của bạn',
+        emailPlaceholder: 'ban@email.com',
+        emailNote: 'Email của bạn sẽ không được công khai',
+        commentPlaceholder: 'Chia sẻ suy nghĩ của bạn...',
+        min: 'Tối thiểu 3 ký tự',
+        submitting: 'Đang gửi...',
+        submit: 'Gửi',
+        submitError: 'Không gửi được bình luận',
+        genericError: 'Đã xảy ra lỗi',
+        requiredError: 'Vui lòng nhập tên, email và nội dung bình luận.',
+        emailError: 'Vui lòng nhập email hợp lệ.',
+        minError: 'Bình luận cần tối thiểu 3 ký tự.',
+        rateLimited: 'Bạn gửi quá nhiều bình luận. Vui lòng thử lại sau ít phút.',
+        invalidOrigin: 'Yêu cầu không hợp lệ. Vui lòng tải lại trang và thử lại.',
+        serverError: 'Máy chủ chưa lưu được bình luận. Vui lòng thử lại sau.',
+      }
+    : {
+        title: 'Leave a Comment',
+        successTitle: 'Comment submitted successfully!',
+        successDescription: 'Your comment will be visible after approval.',
+        failedTitle: 'Failed to submit comment',
+        requiredName: 'Name',
+        email: 'Email',
+        comment: 'Comment',
+        namePlaceholder: 'Your name',
+        emailPlaceholder: 'your@email.com',
+        emailNote: 'Your email will not be published',
+        commentPlaceholder: 'Share your thoughts...',
+        min: 'Minimum 3 characters',
+        submitting: 'Submitting...',
+        submit: 'Submit',
+        submitError: 'Failed to submit comment',
+        genericError: 'An error occurred',
+        requiredError: 'Please provide your name, email, and comment.',
+        emailError: 'Please provide a valid email address.',
+        minError: 'Comment must be at least 3 characters long.',
+        rateLimited: 'Too many comments. Please try again in a few minutes.',
+        invalidOrigin: 'Invalid request. Please reload the page and try again.',
+        serverError: 'The server could not save the comment. Please try again later.',
+      };
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [content, setContent] = useState('');
@@ -24,9 +75,16 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccess(false);
+
+    const validationError = validateCommentForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const response = await fetch('/api/comments', {
@@ -42,10 +100,10 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         }),
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit comment');
+        throw new Error(getCommentErrorMessage(result, response.status));
       }
 
       // Success
@@ -64,11 +122,47 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         setSuccess(false);
       }, 5000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : copy.genericError);
     } finally {
       setLoading(false);
     }
   };
+
+  function validateCommentForm() {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedContent) {
+      return copy.requiredError;
+    }
+
+    if (trimmedContent.length < 3) {
+      return copy.minError;
+    }
+
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return copy.emailError;
+    }
+
+    return null;
+  }
+
+  function getCommentErrorMessage(result: unknown, status: number) {
+    const code = typeof result === 'object' && result && 'code' in result
+      ? String((result as { code?: unknown }).code || '')
+      : '';
+
+    if (code === 'invalid_comment_payload') return copy.requiredError;
+    if (code === 'invalid_email') return copy.emailError;
+    if (code === 'comment_too_short') return copy.minError;
+    if (code === 'rate_limited' || status === 429) return copy.rateLimited;
+    if (code === 'invalid_origin' || status === 403) return copy.invalidOrigin;
+    if (code === 'comment_storage_unavailable' || status >= 500) return copy.serverError;
+
+    return copy.submitError;
+  }
 
   return (
     <motion.div
@@ -78,7 +172,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
       className="surface-card p-4 sm:p-6"
     >
       <h3 className="text-lg sm:text-xl font-bold text-[var(--text)] mb-4 sm:mb-6">
-        Leave a Comment
+        {copy.title}
       </h3>
 
       {/* Success Message */}
@@ -91,10 +185,10 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
           <CheckCircle className="text-green-500 flex-shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
             <p className="text-green-700 text-sm sm:text-base font-medium">
-              Comment submitted successfully!
+              {copy.successTitle}
             </p>
             <p className="text-green-600 text-xs sm:text-sm mt-1">
-              Your comment will be visible after approval.
+              {copy.successDescription}
             </p>
           </div>
         </motion.div>
@@ -110,7 +204,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
           <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
           <div className="flex-1">
             <p className="text-red-700 text-sm sm:text-base font-medium">
-              Failed to submit comment
+              {copy.failedTitle}
             </p>
             <p className="text-red-600 text-xs sm:text-sm mt-1">{error}</p>
           </div>
@@ -122,36 +216,36 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-              Name <span className="text-red-400">*</span>
+              {copy.requiredName} <span className="text-red-400">*</span>
             </label>
             <Input
               id="name"
               type="text"
-              placeholder="Your name"
+              placeholder={copy.namePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
-              maxLength={255}
+              maxLength={80}
             />
           </div>
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-              Email <span className="text-red-400">*</span>
+              {copy.email} <span className="text-red-400">*</span>
             </label>
             <Input
               id="email"
               type="email"
-              placeholder="your@email.com"
+              placeholder={copy.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
-              maxLength={255}
+              maxLength={254}
             />
             <p className="text-xs text-[var(--text-soft)] mt-1">
-              Your email will not be published
+              {copy.emailNote}
             </p>
           </div>
         </div>
@@ -159,11 +253,11 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         {/* Comment */}
         <div>
           <label htmlFor="content" className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-            Comment <span className="text-red-400">*</span>
+            {copy.comment} <span className="text-red-400">*</span>
           </label>
           <textarea
             id="content"
-            placeholder="Share your thoughts..."
+            placeholder={copy.commentPlaceholder}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
@@ -174,7 +268,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
           />
           <div className="flex justify-between items-center mt-1">
             <p className="text-xs text-[var(--text-soft)]">
-              Minimum 3 characters
+              {copy.min}
             </p>
             <p className="text-xs text-[var(--text-soft)]">
               {content.length} / 5000
@@ -192,12 +286,12 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
             {loading ? (
               <>
                 <Loader2 className="animate-spin mr-2" size={18} />
-                Submitting...
+                {copy.submitting}
               </>
             ) : (
               <>
                 <Send size={18} className="mr-2" />
-                Submit
+                {copy.submit}
               </>
             )}
           </Button>
