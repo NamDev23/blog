@@ -10,8 +10,10 @@ interface UsePostReturn {
 }
 
 /**
- * Custom hook để fetch một post theo slug
- * Fallback to mock data nếu API không hoạt động
+ * Hook lấy chi tiết một bài viết theo slug ở phía client.
+ *
+ * Dùng cho các màn hình client-only hoặc trạng thái preview. Các trang public cần
+ * SEO nên ưu tiên fetch ở server/page level để metadata và HTML ban đầu đầy đủ.
  */
 export function usePost(slug: string): UsePostReturn {
   const [post, setPost] = useState<Post | null>(null);
@@ -25,6 +27,7 @@ export function usePost(slug: string): UsePostReturn {
 
       try {
         const response = await fetch(`/api/posts/${slug}`, {
+          // Timeout ngắn để fallback dev không khiến trang chờ quá lâu.
           signal: AbortSignal.timeout(5000)
         });
 
@@ -35,7 +38,7 @@ export function usePost(slug: string): UsePostReturn {
         const data = await response.json();
         setPost(data);
       } catch (fetchErr) {
-        // Fallback to mock data
+        // Fallback mock giúp local UI kiểm tra được khi Supabase chưa cấu hình.
         console.warn('Using mock data - Supabase not configured or API error:', fetchErr);
         const mockPost = mockPosts.find(p => p.slug === slug);
 

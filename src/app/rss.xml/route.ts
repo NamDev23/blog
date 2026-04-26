@@ -6,8 +6,12 @@ import { localizedUrl } from '@/lib/metadata';
 import type { Post } from '@/types';
 
 /**
- * Generate RSS feed
- * Access: /rss.xml
+ * GET /rss.xml
+ * Sinh RSS feed cho bài viết public.
+ *
+ * Feed ưu tiên bản tiếng Việt vì đó là nguồn gốc nội dung trong database/mock.
+ * Metadata song ngữ vẫn được xử lý ở page SEO; RSS giữ một ngôn ngữ để reader
+ * không nhận hai item trùng slug.
  */
 export async function GET() {
   try {
@@ -16,14 +20,14 @@ export async function GET() {
     if (!isSupabaseConfigured) {
       posts = canUseMockApiFallback() ? getMockPosts({ limit: 50 }) : [];
     } else {
-      // Fetch published posts
+      // Chỉ lấy bài đã publish và giới hạn 50 item mới nhất để feed nhẹ.
       const { data, error } = await supabase
         .from('posts')
         .select('*')
         .not('published_at', 'is', null)
         .lte('published_at', new Date().toISOString())
         .order('published_at', { ascending: false })
-        .limit(50); // Giới hạn 50 posts mới nhất
+        .limit(50);
 
       if (error) {
         console.error('Error fetching posts for RSS:', error);
@@ -33,7 +37,7 @@ export async function GET() {
       posts = data || [];
     }
 
-    // Generate RSS XML
+    // XML được escape thủ công vì RSS là chuỗi raw, không qua React escaping.
     const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" 
      xmlns:atom="http://www.w3.org/2005/Atom"
@@ -69,7 +73,7 @@ export async function GET() {
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
         'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache 1 hour
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     });
   } catch (error) {
@@ -79,7 +83,7 @@ export async function GET() {
 }
 
 /**
- * Escape XML special characters
+ * Escape ký tự đặc biệt để title/description không phá XML.
  */
 function escapeXml(unsafe: string): string {
   return unsafe
@@ -91,6 +95,7 @@ function escapeXml(unsafe: string): string {
 }
 
 function stripUnsafeHtml(value: string): string {
+  // RSS content vẫn cho HTML cơ bản, nhưng loại script/iframe/event handler.
   return value
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')

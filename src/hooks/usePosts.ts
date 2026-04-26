@@ -16,8 +16,11 @@ interface UsePostsReturn {
 }
 
 /**
- * Custom hook để fetch posts từ API
- * Fallback to mock data nếu API không hoạt động
+ * Hook lấy danh sách bài viết cho UI client.
+ *
+ * Page server-side vẫn có thể fetch trực tiếp API để SEO tốt hơn; hook này dành
+ * cho các vùng tương tác client-side như filter/search. Fallback mock chỉ giúp
+ * local development chạy được khi Supabase chưa cấu hình.
  */
 export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
   const { category = null, search = '', limit } = options;
@@ -30,7 +33,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
       setLoading(true);
       setError(null);
 
-      // Build query params
+      // Build query params bằng URLSearchParams để encode search/category đúng chuẩn.
       const params = new URLSearchParams();
       if (category) {
         params.append('category', category);
@@ -46,7 +49,7 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
 
       try {
         const response = await fetch(url, {
-          signal: AbortSignal.timeout(5000) // 5 second timeout
+          signal: AbortSignal.timeout(5000) // Tránh UI treo lâu khi API/Supabase không phản hồi.
         });
 
         if (!response.ok) {
@@ -56,12 +59,11 @@ export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
         const data = await response.json();
         setPosts(data);
       } catch (fetchErr) {
-        // Fallback to mock data nếu API không hoạt động
+        // Fallback chỉ nằm trong hook để UI vẫn render được ở môi trường dev.
         console.warn('Using mock data - Supabase not configured or API error:', fetchErr);
 
         let filteredPosts = [...mockPosts];
 
-        // Apply filters
         if (category) {
           filteredPosts = filteredPosts.filter(p => p.category === category);
         }

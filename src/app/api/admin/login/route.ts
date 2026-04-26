@@ -8,6 +8,13 @@ import {
   setAdminSessionCookie,
 } from '@/lib/security';
 
+/**
+ * POST /api/admin/login
+ * Đăng nhập admin bằng ADMIN_API_KEY và cấp cookie session HttpOnly.
+ *
+ * API key chỉ gửi một lần ở form login; các request dashboard sau đó dùng cookie
+ * HMAC session để giảm việc lưu key trong client state/localStorage.
+ */
 export async function POST(request: NextRequest) {
   try {
     const invalidOrigin = requireSafeRequestOrigin(request);
@@ -19,6 +26,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const adminKey = typeof body.adminKey === 'string' ? body.adminKey.trim() : '';
 
+    // Trả lỗi chung, không tiết lộ key thiếu hay sai.
     if (!isValidAdminKey(adminKey)) {
       return jsonResponse(
         { error: 'Invalid admin credentials' },
@@ -28,6 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { token, expiresAt } = createAdminSessionToken();
+    // Cookie security flags được set trong `setAdminSessionCookie`.
     const response = jsonResponse({ success: true, expiresAt }, {}, 'private, no-store');
     setAdminSessionCookie(response, token, expiresAt);
 

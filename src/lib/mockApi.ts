@@ -1,5 +1,11 @@
 import { mockPosts } from '@/lib/mockData';
 
+/**
+ * Mock API fallback chỉ phục vụ local development.
+ *
+ * Khi Supabase chưa cấu hình, public page vẫn có dữ liệu để kiểm tra UI/SEO.
+ * Production không dùng fallback này để tránh hiển thị dữ liệu mẫu như dữ liệu thật.
+ */
 type PostFilter = {
   category?: string | null;
   search?: string;
@@ -15,6 +21,7 @@ export function getMockPosts({ category, search = '', limit, excludeSlug }: Post
   const now = Date.now();
   const searchTerm = search.toLowerCase();
 
+  // Giữ behavior giống public API thật: chỉ trả bài đã publish và không nằm trong tương lai.
   let posts = mockPosts
     .filter((post) => post.published_at && new Date(post.published_at).getTime() <= now)
     .filter((post) => (excludeSlug ? post.slug !== excludeSlug : true));
@@ -64,6 +71,7 @@ export function getMockRelatedPosts(slug: string, limit: number) {
   const currentPost = getMockPostBySlug(slug);
   if (!currentPost) return null;
 
+  // Chấm điểm liên quan tương tự API Supabase: category là tín hiệu mạnh, tag là tín hiệu phụ.
   const scoredPosts = getMockPosts({ excludeSlug: slug }).map((post) => {
     const matchingTags = currentPost.tags.filter((tag) => post.tags.includes(tag)).length;
     const categoryScore = post.category === currentPost.category ? 10 : 0;

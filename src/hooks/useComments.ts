@@ -20,7 +20,11 @@ interface UseCommentsReturn {
 }
 
 /**
- * Custom hook để fetch và manage comments
+ * Hook lấy danh sách comment và gửi comment mới.
+ *
+ * Public UI chỉ truyền `approved: true` để API không trả comment đang chờ duyệt.
+ * Khi gửi comment, server vẫn là nơi validate/rate-limit/sanitize; hook chỉ giữ
+ * trạng thái UX và refetch sau khi gửi thành công.
  */
 export function useComments(options: UseCommentsOptions = {}): UseCommentsReturn {
   const { postId, approved } = options;
@@ -33,7 +37,7 @@ export function useComments(options: UseCommentsOptions = {}): UseCommentsReturn
       setLoading(true);
       setError(null);
 
-      // Build query params
+      // Query params giữ hook dùng lại được cho cả post detail và màn hình admin nếu cần.
       const params = new URLSearchParams();
       if (postId) {
         params.append('post_id', postId);
@@ -56,7 +60,7 @@ export function useComments(options: UseCommentsOptions = {}): UseCommentsReturn
         const data = await response.json();
         setComments(data);
       } catch (fetchErr) {
-        // Fallback: no comments for now (mock data not needed for comments)
+        // Không dùng mock comment để tránh người dùng hiểu nhầm là bình luận thật.
         console.warn('Comments API not available:', fetchErr);
         setComments([]);
       }
@@ -92,7 +96,7 @@ export function useComments(options: UseCommentsOptions = {}): UseCommentsReturn
         };
       }
 
-      // Refetch comments after adding
+      // Refetch sau khi gửi để UI lấy lại trạng thái mới nhất từ server.
       await fetchComments();
 
       return {

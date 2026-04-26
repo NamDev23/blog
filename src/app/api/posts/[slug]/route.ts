@@ -7,6 +7,11 @@ import {
 } from '@/lib/supabase';
 import { hasAdminAccess, jsonResponse, requireAdmin } from '@/lib/security';
 import { parsePostPayload } from '@/lib/postPayload';
+import {
+  isMissingPostTranslationsRelation,
+  POST_SELECT_WITH_TRANSLATIONS,
+  syncPostTranslations,
+} from '@/lib/postTranslationStorage';
 import { canUseMockApiFallback, getMockPostBySlug } from '@/lib/mockApi';
 import {
   ensureSupabaseConfigured,
@@ -16,7 +21,10 @@ import {
 
 /**
  * GET /api/posts/[slug]
- * Lấy chi tiết một bài viết theo slug
+ * Lấy chi tiết một bài viết theo slug.
+ *
+ * Public request chỉ trả bài đã publish; admin request có thể đọc cả draft để
+ * editor hoạt động. Fallback mock chỉ bật ở development và chỉ cho public path.
  */
 export async function GET(
   request: NextRequest,
@@ -41,18 +49,27 @@ export async function GET(
 
     const client = isAdmin && isSupabaseAdminConfigured ? supabaseAdmin : supabase;
 
-    let query = client
-      .from('posts')
-      .select('*')
-      .eq('slug', slug);
+    const buildQuery = (selectFields: string) => {
+      // `.single()` giúp phân biệt rõ "không tìm thấy" với lỗi DB khác qua PGRST116.
+      let query = client
+        .from('posts')
+        .select(selectFields)
+        .eq('slug', slug);
 
-    if (!isAdmin) {
-      query = query
-        .not('published_at', 'is', null)
-        .lte('published_at', new Date().toISOString());
+      if (!isAdmin) {
+        query = query
+          .not('published_at', 'is', null)
+          .lte('published_at', new Date().toISOString());
+      }
+
+      return query.single();
+    };
+
+    let { data, error } = await buildQuery(POST_SELECT_WITH_TRANSLATIONS);
+
+    if (error && isMissingPostTranslationsRelation(error)) {
+      ({ data, error } = await buildQuery('*'));
     }
-
-    const { data, error } = await query.single();
 
     if (error) {
       if (!isAdmin && canUseMockApiFallback()) {
@@ -92,7 +109,10 @@ export async function GET(
 
 /**
  * PATCH /api/posts/[slug]
- * Cập nhật bài viết (cần authentication trong tương lai)
+ * Cập nhật bài viết từ admin editor.
+ *
+ * `partial=true` cho phép gửi một phần field nhưng vẫn sanitize mọi field được
+ * gửi lên. Slug trong URL là bản ghi hiện tại; slug mới nếu có nằm trong payload.
  */
 export async function PATCH(
   request: NextRequest,
@@ -107,7 +127,7 @@ export async function PATCH(
 
     const { slug } = await params;
     const body = await request.json();
-    const { payload, errors } = parsePostPayload(body, true);
+    const { payload, translations, errors } = parsePostPayload(body, true);
 
     if (errors.length > 0) {
       return jsonResponse({ error: errors.join(', ') }, { status: 400 });
@@ -125,6 +145,12 @@ export async function PATCH(
       return supabaseFailureResponse(error);
     }
 
+    const translationError = await syncPostTranslations(data.id, translations);
+    if (translationError) {
+      console.error('Post translation sync error:', translationError);
+      return supabaseFailureResponse(translationError);
+    }
+
     return jsonResponse(data, {}, 'private, no-store');
   } catch (error) {
     console.error('API error:', error);
@@ -134,7 +160,10 @@ export async function PATCH(
 
 /**
  * DELETE /api/posts/[slug]
- * Xóa bài viết (cần authentication trong tương lai)
+ * Xóa bài viết.
+ *
+ * Chỉ admin được gọi endpoint này. Nếu cần soft delete trong tương lai, thay
+ * `.delete()` bằng field `deleted_at` để giữ lịch sử analytics/comment.
  */
 export async function DELETE(
   request: NextRequest,

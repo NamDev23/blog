@@ -70,6 +70,13 @@ const fontSizes = [
 const textColors = ['#f4f1e8', '#66d9c2', '#e7b65a', '#8fb6ff', '#d66b4d'];
 const highlightColors = ['#2cb99e33', '#e7b65a40', '#8fb6ff38', '#d66b4d38'];
 
+/**
+ * Rich text editor cho nội dung bài viết admin.
+ *
+ * Tiptap lưu output dưới dạng HTML vì article renderer/public page đang đọc HTML
+ * trực tiếp từ field `content`. Component này tập trung vào trải nghiệm biên tập;
+ * API route vẫn sanitize lần cuối trước khi lưu để không tin tuyệt đối vào client.
+ */
 export default function RichPostEditor({ value, onChange, featuredImage }: RichPostEditorProps) {
   const [openPanel, setOpenPanel] = useState<'link' | 'image' | null>(null);
   const [linkUrl, setLinkUrl] = useState('');
@@ -83,6 +90,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
 
   const editor = useEditor({
     immediatelyRender: false,
+    // `immediatelyRender=false` tránh mismatch hydration trong Next client component.
     extensions: [
       StarterKit.configure({
         heading: {
@@ -90,6 +98,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
         },
         codeBlock: {
           HTMLAttributes: {
+            // Class này giúp `enhanceCodeBlocks` nhận diện code block khi render/preview.
             class: 'code-terminal-source',
           },
         },
@@ -102,6 +111,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
       }),
       Underline,
       LinkExtension.configure({
+        // Link trong editor không tự mở khi click để admin có thể chọn/sửa link dễ hơn.
         openOnClick: false,
         autolink: true,
         linkOnPaste: true,
@@ -111,11 +121,13 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
         },
       }),
       ImageExtension.configure({
+        // Ảnh trong bài viết lazy-load để article dài không tải tất cả media ngay.
         HTMLAttributes: {
           loading: 'lazy',
           decoding: 'async',
         },
         resize: {
+          // Resize ảnh ngay trong editor giúp admin kiểm soát tỷ lệ trước khi publish.
           enabled: true,
           minWidth: 160,
           minHeight: 90,
@@ -134,18 +146,22 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
       },
     },
     onUpdate: ({ editor: activeEditor }) => {
+      // Lưu HTML mỗi lần editor thay đổi để PostEditor submit cùng form state.
       onChange(activeEditor.getHTML());
     },
   });
 
   useEffect(() => {
     if (!editor) return;
+    // Khi edit post hoặc reset form, đồng bộ value bên ngoài vào Tiptap mà không
+    // phát lại onUpdate để tránh vòng lặp state.
     if (value !== editor.getHTML()) {
       editor.commands.setContent(value || '<p></p>', { emitUpdate: false });
     }
   }, [editor, value]);
 
   const stats = useMemo(() => {
+    // CharacterCount extension là nguồn chính; fallback dùng HTML stripping khi editor chưa sẵn sàng.
     const storage = editor?.storage.characterCount as CharacterCountStorage | undefined;
     return {
       words: storage?.words() || countWordsFromHtml(value),
@@ -165,6 +181,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
 
   const openLinkPanel = useCallback(() => {
     if (!editor) return;
+    // Panel link lấy URL hiện tại nếu selection đang nằm trong link.
     setOpenPanel((current) => (current === 'link' ? null : 'link'));
     setLinkUrl((editor.getAttributes('link').href as string | undefined) || '');
     setLinkError('');
@@ -172,6 +189,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
 
   const openImagePanel = useCallback(() => {
     if (!editor) return;
+    // Nếu đang chọn ảnh thì đọc attribute hiện tại; nếu chưa có thì gợi ý featured image.
     const attrs = editor.getAttributes('image') as {
       src?: string;
       alt?: string;
@@ -192,6 +210,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
   function applyBlock(value: string) {
     if (!editor) return;
 
+    // Paragraph và heading dùng cùng select để admin không phải nhớ phím tắt Markdown.
     if (value === 'p') {
       editor.chain().focus().setParagraph().run();
       return;
@@ -205,6 +224,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
     if (!editor) return;
     const url = normalizeLinkUrl(linkUrl);
 
+    // URL rỗng nghĩa là xóa link khỏi selection hiện tại.
     if (!url) {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       setOpenPanel(null);
@@ -241,6 +261,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
       height: height || undefined,
     };
 
+    // Nếu selection đang là ảnh thì update attribute; nếu không thì insert ảnh mới.
     if (editor.isActive('image')) {
       editor.chain().focus().updateAttributes('image', attrs).run();
     } else {
@@ -261,6 +282,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
 
   return (
     <div className="rich-post-editor overflow-hidden rounded-lg border border-[var(--line)] bg-[rgba(13,18,15,0.45)]">
+      {/* Toolbar chia thành nhóm rõ ràng: block style, inline marks, list, align, media, history. */}
       <div className="border-b border-[var(--line)] bg-[rgba(244,241,232,0.035)] p-3">
         <div className="flex flex-wrap items-center gap-2">
           <select value={currentBlock} onChange={(event) => applyBlock(event.target.value)} className={controlClass} aria-label="Block style">
@@ -369,6 +391,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
+          {/* Swatch màu giúp admin format nhanh mà không nhập mã màu thủ công. */}
           <div className="flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[rgba(13,18,15,0.46)] px-2 py-1.5">
             <Type size={15} className="text-[var(--text-soft)]" />
             {textColors.map((color) => (
@@ -419,6 +442,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
         </div>
       </div>
 
+      {/* Panel link inline để không cần modal, giúp editor vẫn giữ ngữ cảnh selection. */}
       {openPanel === 'link' && (
         <div className="grid gap-3 border-b border-[var(--line)] bg-[rgba(244,241,232,0.025)] p-4 sm:grid-cols-[1fr_auto_auto] sm:items-end">
           <label className="grid gap-2">
@@ -435,6 +459,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
         </div>
       )}
 
+      {/* Panel ảnh hỗ trợ alt/title/kích thước để bài viết tốt hơn cho SEO và accessibility. */}
       {openPanel === 'image' && (
         <div className="grid gap-3 border-b border-[var(--line)] bg-[rgba(244,241,232,0.025)] p-4 lg:grid-cols-[1.4fr_0.9fr_0.9fr_0.5fr_0.5fr_auto] lg:items-end">
           <label className="grid gap-2">
@@ -480,6 +505,7 @@ export default function RichPostEditor({ value, onChange, featuredImage }: RichP
 }
 
 function ToolbarButton({ className = '', isActive, children, ...props }: ToolbarButtonProps) {
+  // Button icon cố định 40x40 để toolbar không nhảy layout khi active/disabled.
   return (
     <button
       type="button"
@@ -496,10 +522,12 @@ function ToolbarButton({ className = '', isActive, children, ...props }: Toolbar
 }
 
 function ToolbarDivider() {
+  // Divider chỉ hiện từ breakpoint sm để toolbar mobile không quá chật.
   return <span className="hidden h-8 w-px bg-[var(--line)] sm:inline-block" />;
 }
 
 function normalizeLinkUrl(value: string) {
+  // Người dùng nhập `example.com` sẽ được nâng thành `https://example.com`.
   const trimmed = value.trim();
   if (!trimmed) return '';
   if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(trimmed)) return trimmed;
@@ -507,16 +535,19 @@ function normalizeLinkUrl(value: string) {
 }
 
 function isAllowedLink(value: string) {
+  // Chỉ cho scheme an toàn/thường dùng; chặn javascript/data URL ở tầng editor.
   return /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(value);
 }
 
 function normalizeImageUrl(value: string) {
+  // Ảnh phải là URL http/https vì Next Image/public renderer không xử lý data URL.
   const trimmed = value.trim();
   if (!trimmed) return '';
   return /^https?:\/\//i.test(trimmed) ? trimmed : '';
 }
 
 function parseDimension(value: string) {
+  // Giới hạn kích thước để admin không vô tình tạo ảnh quá lớn làm vỡ layout.
   const number = Number.parseInt(value, 10);
   if (Number.isNaN(number)) return null;
   return Math.min(Math.max(number, 1), 1600);

@@ -4,12 +4,22 @@ import { absoluteUrl, siteConfig } from '@/lib/site';
 import { defaultLocale, localizedPath, type Locale } from '@/lib/locales';
 import { localizePost } from '@/lib/postTranslations';
 
+/**
+ * Metadata tập trung cho toàn bộ website.
+ *
+ * Lý do gom ở một nơi:
+ * - canonical URL và hreflang phải nhất quán giữa `/vi` và `/en`;
+ * - Open Graph/Twitter card dùng cùng nguồn dữ liệu với SEO title/description;
+ * - khi đổi brand/domain, chỉ cần sửa `siteConfig` và các helper tại đây.
+ */
 const SITE_NAME = siteConfig.name;
 const SITE_URL = siteConfig.url;
 const TWITTER_HANDLE = siteConfig.twitterHandle;
 
 type PageKey = 'home' | 'blog' | 'tags' | 'about' | 'contact' | 'projects' | 'resume' | 'privacy';
 
+// Nội dung SEO tĩnh theo từng page. `path` luôn là path chưa gắn locale để helper
+// có thể tự sinh canonical và alternates cho cả tiếng Việt lẫn tiếng Anh.
 const pageCopy: Record<PageKey, Record<Locale, { title: string; description: string; path: string }>> = {
   home: {
     vi: {
@@ -122,6 +132,7 @@ export function localizedUrl(path: string, locale: Locale) {
 }
 
 export function languageAlternates(path: string) {
+  // `x-default` trỏ về locale mặc định để Google hiểu bản mặc định của site.
   return {
     vi: localizedUrl(path, 'vi'),
     en: localizedUrl(path, 'en'),
@@ -142,6 +153,8 @@ function generatePageMetadata(page: PageKey, locale: Locale = defaultLocale, typ
   const url = localizedUrl(copy.path, locale);
   const title = page === 'home' ? copy.title : `${copy.title} | ${SITE_NAME}`;
 
+  // Next Metadata API sẽ tự render `<title>`, canonical, robots, OG và Twitter
+  // tags. Tạo object tại đây giúp các layout/page chỉ cần chọn đúng locale.
   return {
     title: page === 'home'
       ? {
@@ -240,6 +253,8 @@ export function generatePrivacyMetadata(locale: Locale = defaultLocale): Metadat
 }
 
 export function generatePostMetadata(post: Post, locale: Locale = defaultLocale): Metadata {
+  // Post vẫn lưu nội dung canonical, còn `localizePost` phủ bản dịch runtime để
+  // metadata của trang `/en/blog/...` không bị lẫn tiếng Việt.
   const displayPost = localizePost(post, locale);
   const path = `/blog/${post.slug}`;
   const url = localizedUrl(path, locale);

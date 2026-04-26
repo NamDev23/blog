@@ -1,13 +1,21 @@
 import type { Post } from '@/types';
 
+/**
+ * Dữ liệu bài viết mẫu cho local development.
+ *
+ * Khi Supabase chưa cấu hình, API public có thể fallback sang danh sách này để
+ * kiểm tra UI, SEO layout và blog pagination. Production không nên coi dữ liệu
+ * này là nguồn thật; nội dung thật phải nằm trong Supabase.
+ */
 export const defaultAuthorId = '00000000-0000-0000-0000-000000000001';
 
 function toIsoDate(value: string) {
+  // Chuẩn hóa ngày publish để mock data giống format ISO mà Supabase trả về.
   return new Date(value).toISOString();
 }
 
 /**
- * Development fallback content used when Supabase is not reachable locally.
+ * Nội dung fallback development khi Supabase chưa kết nối được ở local.
  */
 export const mockPosts: Post[] = [
   {

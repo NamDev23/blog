@@ -1,12 +1,19 @@
 import type { Locale } from '@/lib/locales';
-import type { Post } from '@/types';
+import type { Post, PostTranslation as StoredPostTranslation } from '@/types';
 
-type PostTranslation = Pick<Post, 'title' | 'content' | 'excerpt'> & {
+/**
+ * Bản dịch tiếng Anh fallback cho bài viết cũ/mock.
+ *
+ * CMS song ngữ mới ưu tiên dữ liệu từ bảng `post_translations`. Map tĩnh này chỉ
+ * còn là lớp tương thích cho mock data hoặc bản ghi cũ chưa được sync translation.
+ * Slug vẫn giữ nguyên giữa hai ngôn ngữ để canonical/hreflang hiện tại ổn định.
+ */
+type StaticPostTranslation = Pick<Post, 'title' | 'content' | 'excerpt'> & {
   seo_title?: string;
   seo_description?: string;
 };
 
-export const englishPostTranslations: Record<string, PostTranslation> = {
+export const englishPostTranslations: Record<string, StaticPostTranslation> = {
   'devops-thuc-chien-tu-commit-den-production': {
     title: 'Practical DevOps: from commit to stable production',
     excerpt: 'A practical DevOps guide for developers: delivery lifecycle, CI/CD, artifacts, environments, deployment strategy, observability, and production checklists.',
@@ -1001,6 +1008,18 @@ pg_restore --clean --if-exists --dbname="$RESTORE_DATABASE_URL" app.dump
 };
 
 export function localizePost(post: Post, locale: Locale): Post {
+  const storedTranslation = getStoredTranslation(post, locale);
+  if (storedTranslation) {
+    return {
+      ...post,
+      title: storedTranslation.title || post.title,
+      excerpt: storedTranslation.excerpt || post.excerpt,
+      content: storedTranslation.content || post.content,
+      seo_title: storedTranslation.seo_title || post.seo_title,
+      seo_description: storedTranslation.seo_description || post.seo_description,
+    };
+  }
+
   if (locale !== 'en') return post;
   const translation = englishPostTranslations[post.slug];
   if (!translation) return post;
@@ -1015,4 +1034,15 @@ export function localizePost(post: Post, locale: Locale): Post {
 
 export function localizePosts(posts: Post[], locale: Locale) {
   return posts.map((post) => localizePost(post, locale));
+}
+
+function getStoredTranslation(post: Post, locale: Locale) {
+  // Supabase relation mặc định trả field theo tên bảng `post_translations`. Field
+  // `translations` được giữ như alias dự phòng nếu sau này API normalize payload.
+  const translations = post.post_translations || post.translations || [];
+  return translations.find((translation) => isCompleteTranslation(translation) && translation.locale === locale);
+}
+
+function isCompleteTranslation(value: StoredPostTranslation) {
+  return Boolean(value.title && value.excerpt && value.content);
 }

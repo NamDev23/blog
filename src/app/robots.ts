@@ -2,8 +2,10 @@ import { MetadataRoute } from 'next';
 import { absoluteUrl, siteConfig } from '@/lib/site';
 
 /**
- * Generate robots.txt
- * Next.js sẽ tự động generate file robots.txt từ function này
+ * Sinh robots.txt bằng MetadataRoute của Next.
+ *
+ * Cho phép index toàn bộ public site, nhưng chặn API, asset nội bộ và admin để
+ * bot không crawl bề mặt không dành cho search result.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -12,10 +14,10 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         disallow: [
-          '/api/',           // Không index API routes
-          '/_next/',         // Không index Next.js internals
-          '/admin',          // Không index admin
-          '/admin/',         // Không index admin (nếu có)
+          '/api/',
+          '/_next/',
+          '/admin',
+          '/admin/',
         ],
       },
     ],

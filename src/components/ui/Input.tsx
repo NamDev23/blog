@@ -6,6 +6,8 @@ import { clsx } from "clsx";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
+// Style input thống nhất cho form public và admin. Ref forwarding giữ component
+// tương thích với form library nếu sau này chuyển sang React Hook Form/Zod.
 const base =
   "w-full px-4 py-3 bg-[rgba(244,241,232,0.06)] border border-[var(--line)] rounded-lg text-[var(--text)] placeholder-[var(--text-soft)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(102,217,194,0.22)] transition-all text-sm shadow-sm";
 

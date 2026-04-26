@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { defaultAuthorId, mockPosts } from '../src/lib/mockData';
+import { englishPostTranslations } from '../src/lib/postTranslations';
 
 loadEnvFile(resolve(process.cwd(), '.env.local'));
 
@@ -65,6 +66,41 @@ async function main() {
 
   if (upsertError) throw upsertError;
 
+  const translationRows = postsToSync.flatMap((post) => {
+    const englishTranslation = englishPostTranslations[post.slug];
+    const rows = [
+      {
+        post_id: post.id,
+        locale: 'vi',
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        seo_title: post.seo_title || post.title,
+        seo_description: post.seo_description || post.excerpt,
+      },
+    ];
+
+    if (englishTranslation) {
+      rows.push({
+        post_id: post.id,
+        locale: 'en',
+        title: englishTranslation.title,
+        excerpt: englishTranslation.excerpt,
+        content: englishTranslation.content,
+        seo_title: englishTranslation.seo_title || englishTranslation.title,
+        seo_description: englishTranslation.seo_description || englishTranslation.excerpt,
+      });
+    }
+
+    return rows;
+  });
+
+  const { error: translationError } = await supabase
+    .from('post_translations')
+    .upsert(translationRows, { onConflict: 'post_id,locale' });
+
+  if (translationError) throw translationError;
+
   const keepIds = mockPosts.map((post) => post.id).join(',');
   const { error: deleteError } = await supabase
     .from('posts')
@@ -74,6 +110,7 @@ async function main() {
   if (deleteError) throw deleteError;
 
   console.log(`Synced ${mockPosts.length} IT posts to Supabase.`);
+  console.log(`Synced ${translationRows.length} localized post records.`);
   console.log(resetViewCounts ? 'View counts were reset from seed data.' : 'Existing view counts were preserved.');
   mockPosts.forEach((post) => console.log(`- ${post.slug}`));
 }
@@ -98,6 +135,11 @@ function validatePosts() {
 
     if (post.seo_description && post.seo_description.length > 170) {
       throw new Error(`seo_description is too long for ${post.slug}: ${post.seo_description.length}`);
+    }
+
+    const englishTranslation = englishPostTranslations[post.slug];
+    if (!englishTranslation) {
+      throw new Error(`Missing English translation for ${post.slug}`);
     }
   });
 }

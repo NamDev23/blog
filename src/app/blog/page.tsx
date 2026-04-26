@@ -17,6 +17,12 @@ import { localizePosts } from '@/lib/postTranslations';
 
 const POSTS_PER_PAGE = 6;
 
+/**
+ * Skeleton card giữ chiều cao gần giống PostCard thật.
+ *
+ * Khi API đang tải, layout không bị nhảy mạnh và người dùng vẫn hiểu đang chờ
+ * danh sách bài viết thay vì màn hình trắng.
+ */
 function BlogCardSkeleton() {
   return (
     <div className="surface-card overflow-hidden animate-pulse flex flex-col h-full">
@@ -90,7 +96,7 @@ export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Debounce search query để tránh lọc lại quá nhiều khi người dùng đang gõ
+  // Debounce search query để tránh lọc lại quá nhiều khi người dùng đang gõ.
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   // Fetch posts từ API theo category; search chạy trên dữ liệu đã localize để EN/VI nhất quán.
@@ -98,12 +104,13 @@ export default function BlogPage() {
     category: selectedCategory,
   });
 
-  // Fetch categories từ API
+  // Category lấy từ API để filter luôn phản ánh dữ liệu publish hiện tại.
   const { categories, loading: categoriesLoading } = useCategories();
 
-  // Check if currently searching (user is typing)
+  // Khi hai giá trị khác nhau nghĩa là user vẫn đang gõ và debounce chưa áp dụng.
   const isSearching = searchQuery !== debouncedSearch;
 
+  // Localize trước khi search để từ khóa tiếng Anh tìm trong bản dịch tiếng Anh.
   const localizedPosts = useMemo(() => localizePosts(posts, locale), [posts, locale]);
 
   const filteredPosts = useMemo(() => {
@@ -126,6 +133,7 @@ export default function BlogPage() {
     });
   }, [debouncedSearch, localizedPosts, locale]);
 
+  // Pagination chỉ chạy trên danh sách đã filter, nên đổi search/category phải reset về page 1.
   const pageCount = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE));
   const safeCurrentPage = Math.min(currentPage, pageCount);
   const paginatedPosts = filteredPosts.slice(
@@ -135,13 +143,12 @@ export default function BlogPage() {
 
   return (
     <>
-      {/* Page Header */}
       <PageHeader
         title={copy.title}
         description={copy.description}
       />
 
-      {/* Search and Filter */}
+      {/* Search/filter nằm trước archive để người đọc nhanh chóng thu hẹp chủ đề. */}
       <Section withDividerBottom>
         {/* Search Bar */}
         <motion.div
@@ -164,7 +171,7 @@ export default function BlogPage() {
               className="pl-12 pr-12"
               enterKeyHint="search"
             />
-            {/* Clear button */}
+            {/* Nút clear chỉ hiện khi có text để tránh icon dư trong input rỗng. */}
             {searchQuery && (
               <button
                 onClick={() => {
@@ -177,7 +184,7 @@ export default function BlogPage() {
                 <X size={20} />
               </button>
             )}
-            {/* Searching indicator */}
+            {/* Spinner nhỏ báo debounce đang chờ, không phải API loading toàn trang. */}
             {isSearching && (
               <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
                 <Loader2 className="animate-spin text-[var(--accent)]" size={16} />
@@ -296,6 +303,7 @@ export default function BlogPage() {
               ))}
             </motion.div>
 
+            {/* Chỉ hiện pagination khi nhiều hơn một trang để UI gọn với ít bài viết. */}
             {pageCount > 1 && (
               <nav
                 aria-label="Blog pagination"

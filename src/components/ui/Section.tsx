@@ -13,6 +13,12 @@ const widthClass: Record<SectionWidth, string> = {
   xl: "max-w-6xl",
 };
 
+/**
+ * Section primitive quản lý padding, container width và divider.
+ *
+ * Dùng primitive này giúp các page giữ nhịp layout nhất quán, thay vì mỗi page tự
+ * viết `section + container` khác nhau.
+ */
 export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   as?: React.ElementType;
   width?: SectionWidth;
@@ -29,6 +35,7 @@ export function Section({
   withDividerBottom = false,
   ...props
 }: SectionProps) {
+  // `as` cho phép đổi semantic tag (`main`, `header`, `section`) mà vẫn giữ layout.
   const Comp = (as || "section") as React.ElementType;
   return (
     <Comp

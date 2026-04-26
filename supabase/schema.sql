@@ -62,7 +62,64 @@ CREATE INDEX IF NOT EXISTS idx_posts_tags ON public.posts USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_posts_noindex ON public.posts(noindex);
 
 -- =====================================================
--- 3. COMMENTS TABLE
+-- 3. POST TRANSLATIONS TABLE
+-- =====================================================
+-- Bảng lưu từng bản ngôn ngữ của bài viết. posts vẫn giữ bản canonical/default
+-- để tương thích code cũ; bảng này là nguồn cho UI song ngữ thật.
+CREATE TABLE IF NOT EXISTS public.post_translations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
+  locale VARCHAR(8) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  excerpt TEXT NOT NULL,
+  content TEXT NOT NULL,
+  seo_title VARCHAR(70),
+  seo_description VARCHAR(170),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  CONSTRAINT post_translations_locale_check CHECK (locale IN ('vi', 'en')),
+  CONSTRAINT post_translations_unique_locale UNIQUE (post_id, locale)
+);
+
+CREATE INDEX IF NOT EXISTS idx_post_translations_post_id ON public.post_translations(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_translations_locale ON public.post_translations(locale);
+
+-- =====================================================
+-- 4. POST VIEWS TABLE
+-- =====================================================
+-- Audit từng lượt xem hợp lệ. Không lưu IP/User-Agent raw; chỉ lưu HMAC hash
+-- để có thể kiểm tra chống spam mà không giữ PII trực tiếp.
+CREATE TABLE IF NOT EXISTS public.post_views (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
+  visitor_hash CHAR(64) NOT NULL,
+  ip_hash CHAR(64) NOT NULL,
+  user_agent_hash CHAR(64) NOT NULL,
+  view_bucket TIMESTAMP WITH TIME ZONE NOT NULL,
+  referrer VARCHAR(500),
+  locale VARCHAR(8),
+  path VARCHAR(500),
+  counted BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  CONSTRAINT post_views_locale_format CHECK (locale IS NULL OR locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  CONSTRAINT post_views_hash_format CHECK (
+    visitor_hash ~ '^[a-f0-9]{64}$'
+    AND ip_hash ~ '^[a-f0-9]{64}$'
+    AND user_agent_hash ~ '^[a-f0-9]{64}$'
+  )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_post_views_unique_bucket
+  ON public.post_views(post_id, visitor_hash, view_bucket);
+CREATE INDEX IF NOT EXISTS idx_post_views_post_created_at
+  ON public.post_views(post_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_post_views_created_at
+  ON public.post_views(created_at DESC);
+
+-- =====================================================
+-- 5. COMMENTS TABLE
 -- =====================================================
 -- Bảng lưu comments cho bài viết
 CREATE TABLE IF NOT EXISTS public.comments (
@@ -85,7 +142,7 @@ CREATE INDEX IF NOT EXISTS idx_comments_approved ON public.comments(approved);
 CREATE INDEX IF NOT EXISTS idx_comments_created_at ON public.comments(created_at DESC);
 
 -- =====================================================
--- 4. CONTACT MESSAGES TABLE
+-- 6. CONTACT MESSAGES TABLE
 -- =====================================================
 -- Bảng lưu tin nhắn liên hệ để admin có thể tra soát inbox
 CREATE TABLE IF NOT EXISTS public.contact_messages (
@@ -111,7 +168,7 @@ CREATE INDEX IF NOT EXISTS idx_contact_messages_created_at ON public.contact_mes
 CREATE INDEX IF NOT EXISTS idx_contact_messages_email ON public.contact_messages(email);
 
 -- =====================================================
--- 5. FUNCTIONS
+-- 7. FUNCTIONS
 -- =====================================================
 
 -- Function để tự động update updated_at timestamp
@@ -123,7 +180,79 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function tăng view_count dạng atomic cho bài đã publish.
+-- Function ghi audit view và tăng view_count dạng atomic cho bài đã publish.
+CREATE OR REPLACE FUNCTION public.track_post_view(
+  post_slug TEXT,
+  visitor_hash TEXT,
+  ip_hash TEXT,
+  user_agent_hash TEXT,
+  view_bucket TIMESTAMP WITH TIME ZONE,
+  referrer TEXT DEFAULT NULL,
+  locale TEXT DEFAULT NULL,
+  path TEXT DEFAULT NULL
+)
+RETURNS TABLE(view_count INTEGER, counted BOOLEAN) AS $$
+DECLARE
+  target_post_id UUID;
+  next_count INTEGER;
+  inserted_count INTEGER;
+BEGIN
+  SELECT id INTO target_post_id
+  FROM public.posts
+  WHERE slug = post_slug
+    AND published_at IS NOT NULL
+    AND published_at <= NOW();
+
+  IF target_post_id IS NULL THEN
+    RETURN QUERY SELECT 0::INTEGER, false;
+    RETURN;
+  END IF;
+
+  INSERT INTO public.post_views (
+    post_id,
+    visitor_hash,
+    ip_hash,
+    user_agent_hash,
+    view_bucket,
+    referrer,
+    locale,
+    path,
+    counted
+  )
+  VALUES (
+    target_post_id,
+    visitor_hash,
+    ip_hash,
+    user_agent_hash,
+    view_bucket,
+    NULLIF(LEFT(referrer, 500), ''),
+    NULLIF(LEFT(locale, 8), ''),
+    NULLIF(LEFT(path, 500), ''),
+    true
+  )
+  ON CONFLICT (post_id, visitor_hash, view_bucket) DO NOTHING;
+
+  GET DIAGNOSTICS inserted_count = ROW_COUNT;
+
+  IF inserted_count > 0 THEN
+    UPDATE public.posts
+    SET view_count = view_count + 1
+    WHERE id = target_post_id
+    RETURNING posts.view_count INTO next_count;
+
+    RETURN QUERY SELECT COALESCE(next_count, 0), true;
+    RETURN;
+  END IF;
+
+  SELECT posts.view_count INTO next_count
+  FROM public.posts
+  WHERE id = target_post_id;
+
+  RETURN QUERY SELECT COALESCE(next_count, 0), false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Legacy helper kept for compatibility with older deployments/scripts.
 CREATE OR REPLACE FUNCTION public.increment_post_view(post_slug TEXT)
 RETURNS INTEGER AS $$
 DECLARE
@@ -153,6 +282,12 @@ CREATE TRIGGER update_posts_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_post_translations_updated_at ON public.post_translations;
+CREATE TRIGGER update_post_translations_updated_at
+  BEFORE UPDATE ON public.post_translations
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 DROP TRIGGER IF EXISTS update_comments_updated_at ON public.comments;
 CREATE TRIGGER update_comments_updated_at
   BEFORE UPDATE ON public.comments
@@ -166,12 +301,14 @@ CREATE TRIGGER update_contact_messages_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
--- 6. ROW LEVEL SECURITY (RLS) POLICIES
+-- 8. ROW LEVEL SECURITY (RLS) POLICIES
 -- =====================================================
 
 -- Enable RLS
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.post_translations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.post_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 
@@ -226,6 +363,40 @@ CREATE POLICY "Authors can delete own posts"
   USING (auth.uid() = author_id);
 
 -- =====================================================
+-- POST TRANSLATIONS POLICIES
+-- =====================================================
+
+-- Public read access for translations of published posts
+DROP POLICY IF EXISTS "Published post translations are publicly readable" ON public.post_translations;
+CREATE POLICY "Published post translations are publicly readable"
+  ON public.post_translations FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.posts
+      WHERE posts.id = post_translations.post_id
+        AND posts.published_at IS NOT NULL
+        AND posts.published_at <= NOW()
+    )
+  );
+
+-- Authenticated users can manage translations. Server admin uses service_role.
+DROP POLICY IF EXISTS "Authenticated users can insert post translations" ON public.post_translations;
+CREATE POLICY "Authenticated users can insert post translations"
+  ON public.post_translations FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Authenticated users can update post translations" ON public.post_translations;
+CREATE POLICY "Authenticated users can update post translations"
+  ON public.post_translations FOR UPDATE
+  USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Authenticated users can delete post translations" ON public.post_translations;
+CREATE POLICY "Authenticated users can delete post translations"
+  ON public.post_translations FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- =====================================================
 -- COMMENTS POLICIES
 -- =====================================================
 
@@ -271,18 +442,24 @@ GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
 GRANT SELECT ON public.users TO anon, authenticated;
 GRANT SELECT ON public.posts TO anon, authenticated;
+GRANT SELECT ON public.post_translations TO anon, authenticated;
 GRANT SELECT, INSERT ON public.comments TO anon, authenticated;
 GRANT INSERT ON public.contact_messages TO anon, authenticated;
+REVOKE ALL ON public.post_views FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.track_post_view(TEXT, TEXT, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.track_post_view(TEXT, TEXT, TEXT, TEXT, TIMESTAMP WITH TIME ZONE, TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION public.increment_post_view(TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.increment_post_view(TEXT) TO anon, authenticated, service_role;
 
 GRANT ALL ON public.users TO service_role;
 GRANT ALL ON public.posts TO service_role;
+GRANT ALL ON public.post_translations TO service_role;
+GRANT ALL ON public.post_views TO service_role;
 GRANT ALL ON public.comments TO service_role;
 GRANT ALL ON public.contact_messages TO service_role;
 
 -- =====================================================
--- 6. SAMPLE DATA (Optional - for testing)
+-- 9. SAMPLE DATA (Optional - for testing)
 -- =====================================================
 
 -- Insert sample user

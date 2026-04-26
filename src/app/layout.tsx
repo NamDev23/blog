@@ -31,6 +31,13 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
+/**
+ * Root layout bọc toàn bộ app.
+ *
+ * Locale ban đầu lấy từ header do `src/proxy.ts` gắn vào request. Cách này giúp
+ * server render đúng `<html lang>` ngay từ response đầu tiên, sau đó
+ * `LanguageProvider` tiếp quản cho client navigation.
+ */
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -47,6 +54,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <Suspense fallback={null}>
+          {/* Analytics là client-only và không được phép chặn render nội dung chính. */}
           <Analytics />
         </Suspense>
         <LanguageProvider initialLocale={initialLocale}>

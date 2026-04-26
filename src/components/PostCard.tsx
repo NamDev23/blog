@@ -25,8 +25,9 @@ interface PostCardProps {
 export default function PostCard({ post, index = 0 }: PostCardProps) {
   const { locale } = useLanguage();
   const copy = commonCopy[locale];
+  // Card luôn localize title/excerpt/content ngay tại render để cùng một post object
+  // dùng được cho cả `/vi/blog` và `/en/blog`, kể cả preview trong admin.
   const localizedPost = localizePost(post, locale);
-  // Calculate reading time
   const readingTime = calculateReadingTime(localizedPost.content);
 
   const containerVariants = {
@@ -94,8 +95,11 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
                 {tag}
               </Badge>
             ))}
+            {/* Giữ chiều cao card ổn định: chỉ hiện hai tag đầu và tóm tắt phần còn lại. */}
             {post.tags.length > 2 && (
-              <span className="text-xs text-[var(--text-soft)]">+{post.tags.length - 2}</span>
+              <span className="text-xs text-[var(--text-soft)]" title={locale === 'vi' ? 'Số thẻ còn lại' : 'Remaining tags'}>
+                +{post.tags.length - 2} {locale === 'vi' ? 'thẻ' : 'tags'}
+              </span>
             )}
           </div>
         )}

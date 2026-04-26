@@ -10,6 +10,12 @@ import { useTags } from '@/hooks/useTags';
 import { usePosts } from '@/hooks/usePosts';
 import { useLanguage } from '@/lib/i18n';
 
+/**
+ * Trang tag cloud.
+ *
+ * Tag count lấy từ API public và chỉ đếm bài đã publish. Khi chọn tag, trang lọc
+ * trên danh sách bài đã tải để phản hồi nhanh mà chưa cần route riêng `/tags/[tag]`.
+ */
 export default function TagsPage() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'
@@ -45,7 +51,7 @@ export default function TagsPage() {
     ? allPosts.filter((post) => post.tags.includes(selectedTag))
     : [];
 
-  // Get tag size based on count (for tag cloud effect)
+  // Tag có nhiều bài sẽ lớn hơn một chút để người đọc nhận biết chủ đề nổi bật.
   const getTagSize = (count: number, maxCount: number) => {
     const ratio = count / maxCount;
     if (ratio > 0.7) return 'text-2xl';
@@ -58,7 +64,6 @@ export default function TagsPage() {
 
   return (
     <>
-      {/* Page Header */}
       <PageHeader
         title={copy.title}
         description={copy.description}

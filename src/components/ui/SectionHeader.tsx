@@ -12,6 +12,12 @@ export interface SectionHeaderProps extends Omit<HTMLMotionProps<"div">, "childr
   align?: "start" | "center";
 }
 
+/**
+ * Header nhỏ cho từng section trong page.
+ *
+ * Animation chạy khi vào viewport và chỉ chạy một lần để trang dài không bị nhấp
+ * nháy khi người dùng scroll qua lại.
+ */
 export default function SectionHeader({
   eyebrow,
   title,

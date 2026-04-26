@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 
 export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
+// Textarea dùng cùng token màu/focus với Input để form không bị lệch style.
 const base =
   "w-full px-4 py-3 bg-[rgba(244,241,232,0.06)] border border-[var(--line)] rounded-lg text-[var(--text)] placeholder-[var(--text-soft)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(102,217,194,0.22)] transition-all resize-none text-sm shadow-sm";
 

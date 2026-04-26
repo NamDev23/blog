@@ -15,6 +15,12 @@ const loginNotes = [
   'API mutations still verify access on the server.',
 ];
 
+/**
+ * Trang đăng nhập admin.
+ *
+ * Key chỉ được POST lên `/api/admin/login`; sau khi thành công server trả cookie
+ * HttpOnly nên component không lưu secret trong localStorage/sessionStorage.
+ */
 export default function AdminLoginPage() {
   const router = useRouter();
   const [adminKey, setAdminKey] = useState('');
@@ -36,6 +42,7 @@ export default function AdminLoginPage() {
       });
       const payload = await response.json().catch(() => ({}));
 
+      // API cố tình trả lỗi chung để không lộ thông tin credential.
       if (!response.ok) {
         throw new Error(payload.error || 'Could not sign in.');
       }

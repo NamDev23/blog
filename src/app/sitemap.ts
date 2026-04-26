@@ -5,6 +5,13 @@ import { languageAlternates, localizedUrl } from '@/lib/metadata';
 import { locales, type Locale } from '@/lib/locales';
 import type { Post } from '@/types';
 
+/**
+ * Sitemap động cho public site.
+ *
+ * Mỗi static page và mỗi bài viết được sinh cả URL `/vi` lẫn `/en`, kèm alternates
+ * để search engine hiểu hai bản ngôn ngữ là cùng một nội dung tương ứng. Admin/API
+ * không xuất hiện trong sitemap.
+ */
 export const dynamic = 'force-dynamic';
 
 const staticPages = [
@@ -51,6 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 async function getPublishedPostsForSitemap(): Promise<Pick<Post, 'slug' | 'updated_at'>[]> {
   try {
+    // Local development vẫn có sitemap từ mock data; production thiếu Supabase sẽ trả rỗng.
     if (!isSupabaseConfigured) {
       return canUseMockApiFallback() ? getMockPosts().map(({ slug, updated_at }) => ({ slug, updated_at })) : [];
     }
@@ -58,6 +66,7 @@ async function getPublishedPostsForSitemap(): Promise<Pick<Post, 'slug' | 'updat
     const { data: posts, error } = await supabase
       .from('posts')
       .select('slug, updated_at, published_at')
+      // Chỉ đưa bài public vào sitemap để không lộ draft/hẹn giờ.
       .not('published_at', 'is', null)
       .lte('published_at', new Date().toISOString())
       .order('published_at', { ascending: false });

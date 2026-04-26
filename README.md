@@ -33,9 +33,16 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ADMIN_API_KEY=use-a-long-random-secret
 ADMIN_SESSION_SECRET=use-another-long-random-secret
 DEFAULT_AUTHOR_ID=00000000-0000-0000-0000-000000000001
+OPENAI_API_KEY=sk-your-openai-key
+OPENAI_TRANSLATION_MODEL=gpt-5
+OPENAI_SEO_MODEL=gpt-5
 ```
 
 The `posts` table includes SEO fields: `seo_title`, `seo_description`, `canonical_url`, and `noindex`. Run the latest `supabase/schema.sql` or add equivalent migrations before using the admin editor against a real database.
+
+The admin post editor supports bilingual publishing. Write a complete Vietnamese or English version, then use AI translation to generate the other language. The translation endpoint runs server-side, requires admin access, sanitizes returned HTML, preserves code/commands/API identifiers, and never exposes `OPENAI_API_KEY` to the browser.
+
+The SEO tab can also call AI for real suggestions: SEO title, meta description, slug, tags, focus keyword, and review notes. The static SEO score remains a local checklist, while the AI suggestion button generates editable metadata from the current draft.
 
 The app includes development-only mock API fallback for public reads, so the UI remains usable when Supabase is not reachable locally. Creating, updating, and deleting posts still require a real Supabase project and admin key.
 

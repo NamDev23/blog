@@ -23,6 +23,16 @@ type ContactPayload = {
   company?: unknown;
 };
 
+/**
+ * POST /api/contact
+ * Nhận tin nhắn từ form liên hệ public.
+ *
+ * Các lớp bảo vệ:
+ * - origin check để giảm CSRF;
+ * - rate limit theo IP;
+ * - honeypot `company` để bỏ qua bot đơn giản;
+ * - sanitize input và trả `code` ổn định để UI dịch lỗi theo locale.
+ */
 export async function POST(request: NextRequest) {
   try {
     const invalidOrigin = requireSafeRequestOrigin(request);
@@ -33,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json()) as ContactPayload;
 
+    // Honeypot: người dùng thật không thấy field này; bot tự điền sẽ nhận 202 giả.
     if (sanitizeText(body.company, 80)) {
       return jsonResponse({ ok: true, code: 'contact_message_received' }, { status: 202 }, 'private, no-store');
     }
@@ -63,6 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isSupabaseConfigured) {
+      // Development vẫn cho form hoàn tất UX dù chưa nối DB; production phải lưu thật.
       if (canUseMockApiFallback()) {
         return jsonResponse(
           {
@@ -81,6 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     const client = isSupabaseAdminConfigured ? supabaseAdmin : supabase;
+    // Lưu user_agent để admin tra soát spam ở mức cơ bản, nhưng không lưu IP thô.
     const { data, error } = await client
       .from('contact_messages')
       .insert({

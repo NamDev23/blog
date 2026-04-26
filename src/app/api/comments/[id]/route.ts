@@ -24,7 +24,10 @@ type CommentUpdateData = {
 
 /**
  * GET /api/comments/[id]
- * Lấy chi tiết một comment
+ * Lấy chi tiết một comment.
+ *
+ * Public chỉ đọc comment đã duyệt và không nhận email. Admin có thể xem đầy đủ
+ * để kiểm duyệt, chỉnh sửa hoặc xóa.
  */
 export async function GET(
   request: NextRequest,
@@ -76,7 +79,11 @@ export async function GET(
 
 /**
  * PATCH /api/comments/[id]
- * Cập nhật comment (approve, edit content)
+ * Cập nhật comment từ admin dashboard.
+ *
+ * Dùng cho hai thao tác chính: approve/unapprove và chỉnh nội dung comment nếu
+ * cần loại bỏ spam/ngôn từ không phù hợp trước khi public.
+ *
  * Body: { approved?, content? }
  */
 export async function PATCH(
@@ -93,7 +100,7 @@ export async function PATCH(
     const { id } = await params;
     const body = (await request.json()) as CommentUpdateBody;
 
-    // Validate at least one field to update
+    // Không cho PATCH rỗng để tránh ghi DB không có ý nghĩa.
     if (body.approved === undefined && body.content === undefined) {
       return jsonResponse(
         { error: 'No fields to update' },
@@ -101,7 +108,7 @@ export async function PATCH(
       );
     }
 
-    // Build update object
+    // Chỉ đưa field hợp lệ vào update object, tránh ghi nhầm field từ request body.
     const updateData: CommentUpdateData = {};
 
     if (body.approved !== undefined) {
@@ -154,7 +161,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/comments/[id]
- * Xóa comment
+ * Xóa comment khỏi dashboard admin.
  */
 export async function DELETE(
   request: NextRequest,

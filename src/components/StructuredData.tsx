@@ -1,6 +1,13 @@
 import { siteConfig } from '@/lib/site';
 import { languageAlternates, localizedUrl } from '@/lib/metadata';
 
+/**
+ * JSON-LD cấp website.
+ *
+ * Structured data được render ở root để search engine hiểu entity chính, ngôn ngữ
+ * hỗ trợ và search action của blog. `suppressHydrationWarning` tránh cảnh báo do
+ * script JSON-LD không cần hydrate như component tương tác.
+ */
 export default function StructuredData() {
   const data = {
     '@context': 'https://schema.org',

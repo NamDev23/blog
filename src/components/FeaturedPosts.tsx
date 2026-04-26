@@ -9,9 +9,17 @@ import { formatLocalizedDate, formatLocalizedReadingTime, getCategoryLabel, useL
 import { localizedPath } from "@/lib/locales";
 import { localizePost } from "@/lib/postTranslations";
 
+/**
+ * Cụm bài nổi bật ở trang blog/home.
+ *
+ * Component lấy tối đa 3 bài đầu: bài mới/quan trọng nhất chiếm diện tích lớn,
+ * hai bài còn lại làm cột phụ. Toàn bộ text đi qua `localizePost` để không bị
+ * lẫn tiếng Việt trên giao diện tiếng Anh.
+ */
 export default function FeaturedPosts({ posts = [] as Post[] }) {
   const { locale } = useLanguage();
   if (!posts || posts.length === 0) return null;
+  // Giữ layout ổn định bằng cách bỏ qua phần dư; danh sách đầy đủ nằm ở grid/pagination.
   const [first, ...rest] = posts;
   const side = rest.slice(0, 2);
   const localizedFirst = localizePost(first, locale);

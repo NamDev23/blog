@@ -9,6 +9,13 @@ import { siteConfig } from '@/lib/site';
 import { useLanguage } from '@/lib/i18n';
 import { localizedPath } from '@/lib/locales';
 
+/**
+ * Hero của trang chủ.
+ *
+ * Nội dung được viết song ngữ tại component vì đây là copy marketing ngắn, không
+ * đến từ CMS. Các CTA dùng `localizedPath` để người dùng không rời khỏi locale
+ * hiện tại khi đi sang blog/contact.
+ */
 export default function HeroSection() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'
@@ -39,6 +46,7 @@ export default function HeroSection() {
         ],
       };
 
+  // Animation chỉ dùng opacity/translate nhẹ để không ảnh hưởng layout shift.
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

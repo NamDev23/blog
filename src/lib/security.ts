@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 
+/**
+ * Security helper dùng chung cho API route.
+ *
+ * File này gom các lớp bảo vệ nhẹ nhưng quan trọng:
+ * - sanitize input trước khi query/insert;
+ * - rate limit theo IP cho form public;
+ * - kiểm tra Origin/Sec-Fetch-Site để giảm rủi ro CSRF;
+ * - xác thực admin bằng API key hoặc cookie session HttpOnly;
+ * - set header phản hồi an toàn cho JSON API.
+ */
 export const PUBLIC_COMMENT_SELECT =
   'id, post_id, author_name, content, created_at, updated_at';
 export const ADMIN_SESSION_COOKIE = 'shadowdev_admin_session';
@@ -21,9 +31,11 @@ const rateLimitStore =
   globalRateLimitStore.__shadowdevRateLimitStore ||
   new Map<string, RateLimitRecord>();
 
+// Lưu trên globalThis để hot reload trong dev không reset bộ đếm quá thường xuyên.
 globalRateLimitStore.__shadowdevRateLimitStore = rateLimitStore;
 
 export function sanitizeText(value: unknown, maxLength: number) {
+  // Text ngắn: gom whitespace thành một khoảng trắng để dùng cho title/name/email.
   if (typeof value !== 'string') return '';
 
   return value
@@ -34,6 +46,7 @@ export function sanitizeText(value: unknown, maxLength: number) {
 }
 
 export function sanitizeLongText(value: unknown, maxLength: number) {
+  // Text dài: giữ xuống dòng cho message/comment nhưng loại control characters nguy hiểm.
   if (typeof value !== 'string') return '';
 
   return value
@@ -43,17 +56,21 @@ export function sanitizeLongText(value: unknown, maxLength: number) {
 }
 
 export function sanitizeSearch(value: string | null) {
+  // Supabase `.or(...ilike...)` dùng `%`, `,`, `()` làm cú pháp nên cần loại bỏ
+  // những ký tự này khỏi search input để tránh phá query expression.
   if (!value) return '';
   return value.replace(/[%,()]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
 }
 
 export function clampLimit(value: string | null, fallback = 24, max = 48) {
+  // Chặn client yêu cầu limit quá lớn gây tải DB hoặc render quá nhiều item.
   const parsed = Number.parseInt(value || '', 10);
   if (Number.isNaN(parsed)) return fallback;
   return Math.min(Math.max(parsed, 1), max);
 }
 
 export function clampPage(value: string | null, fallback = 1) {
+  // Page luôn bắt đầu từ 1 để offset tính được ổn định.
   const parsed = Number.parseInt(value || '', 10);
   if (Number.isNaN(parsed)) return fallback;
   return Math.max(parsed, 1);
@@ -65,6 +82,8 @@ export function rateLimit(
   limit: number,
   windowMs: number
 ) {
+  // Rate limit in-memory phù hợp single instance/local. Khi scale nhiều instance,
+  // nên chuyển store sang Redis/Supabase RPC để giới hạn nhất quán toàn hệ thống.
   const now = Date.now();
   const clientIp = getClientIp(request);
   const key = `${scope}:${clientIp}`;
@@ -95,6 +114,7 @@ export function rateLimit(
 }
 
 export function requireSafeRequestOrigin(request: NextRequest) {
+  // GET/HEAD/OPTIONS không thay đổi dữ liệu nên không cần origin check.
   if (SAFE_METHODS.has(request.method)) return null;
 
   const secFetchSite = request.headers.get('sec-fetch-site');
@@ -103,6 +123,8 @@ export function requireSafeRequestOrigin(request: NextRequest) {
   }
 
   const origin = request.headers.get('origin');
+  // Một số client nội bộ/cURL không gửi Origin. Với form trình duyệt hiện đại,
+  // Sec-Fetch-Site phía trên đã chặn cross-site trước khi đến nhánh này.
   if (!origin) return null;
 
   const allowedHosts = new Set<string>();
@@ -129,6 +151,7 @@ export function requireSafeRequestOrigin(request: NextRequest) {
 }
 
 export function hasAdminAccess(request: NextRequest) {
+  // Hỗ trợ cả x-admin-key/Bearer cho script admin và cookie session cho UI admin.
   const authHeader = request.headers.get('authorization') || '';
   const bearerToken = authHeader.toLowerCase().startsWith('bearer ')
     ? authHeader.slice(7)
@@ -145,10 +168,12 @@ export function isValidAdminKey(value: string) {
   const expected = process.env.ADMIN_API_KEY;
   if (!expected || !value) return false;
 
+  // So sánh constant-time để tránh lộ độ dài/prefix đúng qua timing side channel.
   return timingSafeEqual(value, expected);
 }
 
 export function createAdminSessionToken() {
+  // Session token tự ký bằng HMAC, không cần lưu DB. Payload chỉ chứa role/iat/exp.
   const issuedAt = Math.floor(Date.now() / 1000);
   const expiresAt = issuedAt + ADMIN_SESSION_TTL_SECONDS;
   const payload = Buffer.from(
@@ -188,6 +213,7 @@ export function verifyAdminSessionToken(token: string) {
 }
 
 export function setAdminSessionCookie(response: NextResponse, token: string, expiresAt: number) {
+  // Cookie HttpOnly + SameSite strict để JS client không đọc được và giảm CSRF.
   response.cookies.set({
     name: ADMIN_SESSION_COOKIE,
     value: token,
@@ -212,6 +238,7 @@ export function clearAdminSessionCookie(response: NextResponse) {
 }
 
 export function requireAdmin(request: NextRequest) {
+  // Admin write vẫn kiểm tra origin để tránh dùng cookie session cho request cross-site.
   const invalidOrigin = requireSafeRequestOrigin(request);
   if (invalidOrigin) return invalidOrigin;
 
@@ -230,6 +257,7 @@ export function jsonResponse<T>(
 ) {
   const headers = new Headers(init.headers);
   if (cacheControl) headers.set('Cache-Control', cacheControl);
+  // Chặn browser đoán sai MIME type nếu có proxy/CDN cấu hình chưa chuẩn.
   headers.set('X-Content-Type-Options', 'nosniff');
 
   return NextResponse.json(body, {
@@ -239,6 +267,7 @@ export function jsonResponse<T>(
 }
 
 function timingSafeEqual(a: string, b: string) {
+  // Không dùng early return theo từng ký tự; luôn duyệt max length để giảm timing leak.
   const maxLength = Math.max(a.length, b.length);
   let diff = a.length ^ b.length;
 
@@ -250,13 +279,17 @@ function timingSafeEqual(a: string, b: string) {
 }
 
 function signAdminSession(payload: string) {
+  // Ưu tiên secret riêng cho session; fallback ADMIN_API_KEY để local setup đơn giản hơn.
   const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_API_KEY || '';
   if (!secret) return '';
 
   return createHmac('sha256', secret).update(payload).digest('base64url');
 }
 
-function getClientIp(request: NextRequest) {
+export function getClientIp(request: NextRequest) {
+  // Ưu tiên header từ CDN/reverse proxy, sau đó fallback "unknown". Giá trị này
+  // dùng cho rate limit và hash bảo vệ riêng tư, không hiển thị cho user và không
+  // lưu IP thô trong flow đếm view.
   const forwardedFor = request.headers.get('x-forwarded-for') || '';
   const firstForwardedIp = forwardedFor.split(',')[0]?.trim();
 

@@ -11,6 +11,13 @@ import Button from '@/components/ui/Button';
 import { siteConfig } from '@/lib/site';
 import { useLanguage } from '@/lib/i18n';
 
+/**
+ * Trang liên hệ public.
+ *
+ * Form dùng client validation để phản hồi nhanh theo ngôn ngữ hiện tại. Server
+ * vẫn là lớp quyết định: kiểm tra origin, rate-limit, honeypot, sanitize và lưu
+ * tin nhắn vào bảng `contact_messages`.
+ */
 export default function ContactPage() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'
@@ -145,6 +152,8 @@ export default function ContactPage() {
   }
 
   function getContactErrorMessage(result: unknown, status: number) {
+    // API trả code tiếng Anh ổn định; component map sang copy theo locale để UI
+    // tiếng Việt không bị lẫn thông báo server tiếng Anh.
     const code = typeof result === 'object' && result && 'code' in result
       ? String((result as { code?: unknown }).code || '')
       : '';
@@ -186,8 +195,6 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* Page Header */}
-      {/* Page Header */}
       <PageHeader
         title={copy.title}
         description={copy.description}
@@ -196,7 +203,7 @@ export default function ContactPage() {
       {/* Contact Section */}
       <Section>
         <div className="grid grid-cols-1 lg:grid-cols-[0.82fr_1.18fr] gap-6 sm:gap-8 mb-12">
-            {/* Contact Info */}
+            {/* Cột thông tin giúp người đọc biết loại brief nào phù hợp trước khi gửi form. */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -253,7 +260,7 @@ export default function ContactPage() {
               </motion.div>
             </motion.div>
 
-            {/* Contact Form */}
+            {/* Form chính: có honeypot `company` ẩn ở cuối để lọc bot đơn giản. */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

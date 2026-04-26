@@ -21,7 +21,11 @@ import { ensureSupabaseConfigured, supabaseFailureResponse } from '@/lib/supabas
 
 /**
  * GET /api/comments
- * Lấy danh sách comments
+ * Lấy danh sách comments.
+ *
+ * Public request chỉ thấy comment đã duyệt và không nhận email. Admin request
+ * dùng service role, có pagination metadata và được xem email để kiểm duyệt.
+ *
  * Query params:
  * - post_id: Lọc theo bài viết
  * - approved: Lọc theo trạng thái approved (true/false)
@@ -51,19 +55,17 @@ export async function GET(request: NextRequest) {
 
     const client = isAdmin && isSupabaseAdminConfigured ? supabaseAdmin : supabase;
 
-    // Bắt đầu query
+    // Public select dùng whitelist để không lộ author_email ra client.
     let query = client
       .from('comments')
       .select(isAdmin ? '*' : PUBLIC_COMMENT_SELECT, withMeta ? { count: 'exact' } : undefined)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // Lọc theo post_id nếu có
     if (postId) {
       query = query.eq('post_id', postId);
     }
 
-    // Lọc theo approved status nếu có
     if (isAdmin && approved !== null) {
       const isApproved = approved === 'true';
       query = query.eq('approved', isApproved);
@@ -113,7 +115,11 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/comments
- * Tạo comment mới
+ * Tạo comment mới từ form public.
+ *
+ * Endpoint này có origin check, rate limit, sanitize input và mặc định
+ * `approved=false` để admin duyệt trước khi hiển thị.
+ *
  * Body: { post_id, author_name, author_email, content }
  */
 export async function POST(request: NextRequest) {
@@ -129,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate required fields
+    // Validate phía server là bắt buộc; validate phía client chỉ để UX tốt hơn.
     const post_id = sanitizeText(body.post_id, 80);
     const author_name = sanitizeText(body.author_name, 80);
     const author_email = sanitizeText(body.author_email, 254).toLowerCase();
@@ -146,7 +152,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailRegex.test(author_email)) {
       return jsonResponse(
@@ -156,7 +161,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate content length
     if (content.trim().length < 3) {
       return jsonResponse(
         { code: 'comment_too_short', error: 'Comment must be at least 3 characters long' },
@@ -165,7 +169,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert comment (approved = false by default)
+    // Nếu service role có cấu hình thì dùng admin client để ghi ổn định với RLS.
     const writeClient = isSupabaseAdminConfigured ? supabaseAdmin : supabase;
     const { data, error } = await writeClient
       .from('comments')

@@ -13,7 +13,11 @@ interface CommentFormProps {
 }
 
 /**
- * Form để thêm comment mới
+ * Form gửi comment public.
+ *
+ * Client validate để phản hồi nhanh theo locale hiện tại. Server vẫn validate lại,
+ * rate-limit, sanitize và đặt comment ở trạng thái chờ duyệt nên không tin vào
+ * bất kỳ dữ liệu nào từ form này.
  */
 export default function CommentForm({ postId, onCommentAdded }: CommentFormProps) {
   const { locale } = useLanguage();
@@ -106,18 +110,18 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         throw new Error(getCommentErrorMessage(result, response.status));
       }
 
-      // Success
+      // Thành công nghĩa là server đã nhận comment, chưa có nghĩa comment được public ngay.
       setSuccess(true);
       setName('');
       setEmail('');
       setContent('');
 
-      // Call callback
+      // Cho parent refetch danh sách comment nếu cần.
       if (onCommentAdded) {
         onCommentAdded();
       }
 
-      // Hide success message after 5 seconds
+      // Ẩn thông báo sau vài giây để form trở lại trạng thái gọn.
       setTimeout(() => {
         setSuccess(false);
       }, 5000);
@@ -150,6 +154,8 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
   }
 
   function getCommentErrorMessage(result: unknown, status: number) {
+    // API trả `code` ổn định, component map sang thông báo theo locale thay vì
+    // hiển thị trực tiếp message tiếng Anh từ server.
     const code = typeof result === 'object' && result && 'code' in result
       ? String((result as { code?: unknown }).code || '')
       : '';
@@ -175,7 +181,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         {copy.title}
       </h3>
 
-      {/* Success Message */}
+      {/* Thông báo thành công chỉ nói comment đang chờ duyệt, không hứa hiển thị ngay. */}
       {success && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -194,7 +200,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
         </motion.div>
       )}
 
-      {/* Error Message */}
+      {/* Lỗi hiển thị bằng copy đã localize để không lẫn ngôn ngữ trong UI. */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -212,7 +218,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Name and Email */}
+        {/* Tên/email tách 2 cột trên desktop và xếp dọc trên mobile. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-[var(--text-muted)] mb-2">
@@ -250,7 +256,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
           </div>
         </div>
 
-        {/* Comment */}
+        {/* Giới hạn 5000 ký tự để tránh payload quá lớn và giữ admin moderation dễ đọc. */}
         <div>
           <label htmlFor="content" className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {copy.comment} <span className="text-red-400">*</span>
@@ -276,7 +282,7 @@ export default function CommentForm({ postId, onCommentAdded }: CommentFormProps
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Disable nút gửi khi form chưa đạt điều kiện tối thiểu để giảm request lỗi. */}
         <div className="flex justify-end">
           <Button
             type="submit"

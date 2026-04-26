@@ -118,6 +118,13 @@ const interviewPoints = [
   'Show the ShadowDev admin login, CMS posting flow, protected API routes, and SEO structure.',
 ];
 
+/**
+ * Trang resume dạng "CV sống".
+ *
+ * Nội dung được nhóm theo năng lực, hệ thống sản phẩm và bằng chứng phỏng vấn để
+ * người đọc kỹ thuật hiểu nhanh kinh nghiệm thực tế. Các mảng data ở đầu file
+ * giúp layout render lặp lại nhất quán và dễ chuyển sang CMS sau này.
+ */
 export default function ResumePage() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'

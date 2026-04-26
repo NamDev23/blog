@@ -1,7 +1,6 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -32,10 +31,12 @@ interface PostDetailPageProps {
 type TocItem = { id: string; text: string; level: number };
 
 function slugifyHeading(text: string) {
+  // Heading id dùng cùng slugify với post slug để anchor dễ đọc và ổn định.
   return slugify(text);
 }
 
 function escapeAttribute(value: string) {
+  // Anchor id/text được nhúng vào HTML string nên cần escape attribute thủ công.
   return value
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
@@ -44,6 +45,8 @@ function escapeAttribute(value: string) {
 }
 
 function prepareArticleContent(content: string) {
+  // Chuẩn bị HTML article một lần: sanitize, bọc code block, thêm id/anchor cho h2-h3
+  // và đồng thời sinh Table of Contents.
   const toc: TocItem[] = [];
   const idCounts = new Map<string, number>();
   const safeContent = sanitizeArticleHtml(content);
@@ -75,7 +78,28 @@ function prepareArticleContent(content: string) {
 }
 
 function sanitizeArticleHtml(content: string) {
+  // Tách hàm nhỏ để nếu sau này đổi sanitizer chuyên dụng thì chỉ sửa một điểm.
   return sanitizeHtmlContent(content);
+}
+
+function ArticleHeroImage({ src, title }: { src: string | null; title: string }) {
+  // Ảnh remote có thể lỗi/hết hạn; fallback giữ hero không bị trống hoàn toàn.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const imageSrc = src && failedSrc !== src ? src : 'https://picsum.photos/1200/600?blur=1';
+
+  if (!src) return null;
+
+  return (
+    <Image
+      src={imageSrc}
+      alt={title}
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover opacity-80 saturate-[0.86]"
+      onError={() => setFailedSrc(src)}
+    />
+  );
 }
 
 export default function PostDetailPage({ params }: PostDetailPageProps) {
@@ -83,15 +107,15 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
   const copy = commonCopy[locale];
   const [slug, setSlug] = useState<string>('');
 
-  // Unwrap params
+  // App Router truyền params dạng Promise cho client wrapper, nên unwrap trong effect.
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
   }, [params]);
 
-  // Fetch post từ API
+  // Fetch post từ API public/admin-aware; hook có fallback mock ở development.
   const { post, loading, error } = usePost(slug);
 
-  // Fetch related posts
+  // Related posts chỉ cần 2 bài để không làm cuối bài quá dài.
   const { posts: relatedPosts, loading: relatedLoading } = useRelatedPosts(slug, 2);
   const displayPost = useMemo(() => (post ? localizePost(post, locale) : null), [post, locale]);
   const localizedRelatedPosts = useMemo(
@@ -101,7 +125,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
   const [viewState, setViewState] = useState<{ slug: string; count: number } | null>(null);
   const countedSlugsRef = useRef<Set<string>>(new Set());
 
-  // TOC state and content ref
+  // Ref article content phục vụ IntersectionObserver và event delegation copy code.
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -115,42 +139,74 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
   useEffect(() => {
     if (!displayPost?.slug) return;
 
-    if (countedSlugsRef.current.has(displayPost.slug)) return;
-    countedSlugsRef.current.add(displayPost.slug);
-
+    const viewUrl = `/api/posts/${encodeURIComponent(displayPost.slug)}/view`;
     const storageKey = `shadowdev:viewed:${displayPost.slug}`;
     const viewTtlMs = 30 * 60 * 1000;
     const now = Date.now();
+    let cancelled = false;
+
+    const applyViewCount = (payload: unknown) => {
+      // API view trả payload nhỏ; validate dạng object trước khi cập nhật UI.
+      if (cancelled || !payload || typeof payload !== 'object' || !('view_count' in payload)) return;
+      const nextCount = Number((payload as { view_count?: unknown }).view_count);
+      if (Number.isFinite(nextCount)) {
+        setViewState({ slug: displayPost.slug, count: nextCount });
+      }
+    };
+
+    const fetchCurrentViewCount = () => {
+      // Không polling khi tab ẩn để giảm request không cần thiết.
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+
+      fetch(viewUrl, { cache: 'no-store' })
+        .then((response) => response.json().catch(() => null))
+        .then(applyViewCount)
+        .catch(() => null);
+    };
 
     try {
       const lastViewedAt = Number(window.localStorage.getItem(storageKey) || '0');
-      if (lastViewedAt && now - lastViewedAt < viewTtlMs) return;
+      if (lastViewedAt && now - lastViewedAt < viewTtlMs) {
+        // Nếu user đã được tính view trong TTL, chỉ đọc count hiện tại thay vì POST.
+        fetchCurrentViewCount();
+        const intervalId = window.setInterval(fetchCurrentViewCount, 45_000);
+        return () => {
+          cancelled = true;
+          window.clearInterval(intervalId);
+        };
+      }
     } catch {
-      // Local storage may be unavailable in restricted browsers; server rate limit is still authoritative.
+      // localStorage có thể bị chặn; server rate limit/DB unique key vẫn là lớp quyết định.
     }
 
-    let cancelled = false;
+    if (!countedSlugsRef.current.has(displayPost.slug)) {
+      countedSlugsRef.current.add(displayPost.slug);
 
-    fetch(`/api/posts/${encodeURIComponent(displayPost.slug)}/view`, {
-      method: 'POST',
-      cache: 'no-store',
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then((response) => response.json().catch(() => null))
-      .then((payload) => {
-        if (cancelled || !payload || typeof payload.view_count !== 'number') return;
-        setViewState({ slug: displayPost.slug, count: payload.view_count });
-
-        try {
-          window.localStorage.setItem(storageKey, String(now));
-        } catch {
-          // Ignore storage failures; view counting still works through the server.
-        }
+      fetch(viewUrl, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
       })
-      .catch(() => null);
+        .then((response) => response.json().catch(() => null))
+        .then((payload) => {
+          applyViewCount(payload);
+
+          try {
+            window.localStorage.setItem(storageKey, String(now));
+          } catch {
+            // Bỏ qua lỗi storage; view counting vẫn chạy qua server.
+          }
+        })
+        .catch(() => null);
+    } else {
+      fetchCurrentViewCount();
+    }
+
+    const intervalId = window.setInterval(fetchCurrentViewCount, 45_000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
   }, [displayPost?.slug, displayPost?.view_count]);
 
@@ -160,6 +216,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
     const shareUrl = window.location.href;
     try {
       if (navigator.share) {
+        // Web Share API cho trải nghiệm native trên mobile.
         await navigator.share({
           title: displayPost.title,
           text: displayPost.excerpt,
@@ -170,6 +227,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
 
       await navigator.clipboard?.writeText(shareUrl);
     } catch {
+      // Nếu share native bị hủy/lỗi, thử copy URL như fallback nhẹ.
       await navigator.clipboard?.writeText(shareUrl);
     }
   };
@@ -188,6 +246,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
           }
         });
       },
+      // Vùng active nằm gần giữa viewport để TOC không đổi quá sớm khi vừa chạm heading.
       { rootMargin: '-40% 0px -55% 0px', threshold: [0, 1] }
     );
 
@@ -199,6 +258,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
     if (!contentRef.current) return;
 
     const container = contentRef.current;
+    // Nội dung article là HTML động nên listener copy code dùng event delegation.
     const handleCopy = createCodeCopyHandler();
     container.addEventListener('click', handleCopy);
     return () => {
@@ -207,7 +267,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
   }, [articleContent.html]);
 
 
-  // Loading state
+  // Loading state.
   if (loading) {
     return (
       <Section>
@@ -224,7 +284,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
     );
   }
 
-  // Error state
+  // Error/not-found state.
   if (error || !displayPost) {
     return (
       <Section>
@@ -252,6 +312,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
   }
 
   const articleJsonLd = {
+    // JSON-LD riêng cho bài viết giúp search engine hiểu author, ngày publish và ngôn ngữ.
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: displayPost.title,
@@ -288,16 +349,7 @@ export default function PostDetailPage({ params }: PostDetailPageProps) {
         transition={{ duration: 0.6 }}
         className="relative h-56 overflow-hidden bg-[#090d0b] sm:h-72 md:h-[28rem]"
       >
-        {displayPost.featured_image && (
-          <img
-            src={displayPost.featured_image}
-            alt={displayPost.title}
-            className="w-full h-full object-cover opacity-80 saturate-[0.86]"
-            loading="lazy"
-            decoding="async"
-            onError={(e) => { const t = e.currentTarget as HTMLImageElement; t.onerror = null; t.src = 'https://picsum.photos/1200/600?blur=1'; }}
-          />
-        )}
+        <ArticleHeroImage src={displayPost.featured_image} title={displayPost.title} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d120f] via-[#0d120f]/38 to-transparent"></div>
       </motion.div>
 

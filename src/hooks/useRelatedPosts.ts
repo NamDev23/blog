@@ -9,8 +9,10 @@ interface UseRelatedPostsReturn {
 }
 
 /**
- * Custom hook để fetch related posts
- * Fallback to mock data nếu API không hoạt động
+ * Hook lấy bài viết liên quan cho article page.
+ *
+ * API server đã có scoring theo tag/category. Fallback local lặp lại thuật toán
+ * đơn giản để layout related posts vẫn kiểm tra được khi chưa nối Supabase.
  */
 export function useRelatedPosts(slug: string, limit: number = 3): UseRelatedPostsReturn {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -40,7 +42,7 @@ export function useRelatedPosts(slug: string, limit: number = 3): UseRelatedPost
           const data = await response.json();
           setPosts(data);
         } catch (fetchErr) {
-          // Fallback to mock data
+          // Fallback mock chỉ dùng development; production API không dựa vào dữ liệu mẫu.
           console.warn('Using mock data - Supabase not configured or API error:', fetchErr);
 
           const currentPost = mockPosts.find(p => p.slug === slug);
@@ -49,7 +51,7 @@ export function useRelatedPosts(slug: string, limit: number = 3): UseRelatedPost
             return;
           }
 
-          // Simple algorithm: find posts with same category or tags
+          // Thuật toán fallback: category là tín hiệu chính, tag trùng cộng điểm phụ.
           const relatedPosts = mockPosts
             .filter(p => p.slug !== slug)
             .map(p => {

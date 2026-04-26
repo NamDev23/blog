@@ -14,14 +14,16 @@ import {
   Loader2,
   Save,
   SearchCheck,
+  Sparkles,
   Settings2,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import RichPostEditor from '@/components/admin/RichPostEditor';
+import PostCard from '@/components/PostCard';
 import { Input } from '@/components/ui/Input';
 import Section from '@/components/ui/Section';
 import { Textarea } from '@/components/ui/Textarea';
-import { Post } from '@/types';
+import { Post, PostTranslation } from '@/types';
 import { slugify } from '@/lib/utils';
 import { createCodeCopyHandler, enhanceCodeBlocks } from '@/lib/codeBlocks';
 
@@ -30,19 +32,25 @@ const DEFAULT_AUTHOR_ID = '00000000-0000-0000-0000-000000000001';
 type EditorMode = 'create' | 'edit';
 type EditorTab = 'content' | 'seo' | 'preview';
 type PublishMode = 'draft' | 'now';
+type ContentLocale = 'vi' | 'en';
+
+type LocalizedFields = {
+  title: string;
+  excerpt: string;
+  content: string;
+  seoTitle: string;
+  seoDescription: string;
+};
 
 type FormState = {
-  title: string;
+  vi: LocalizedFields;
+  en: LocalizedFields;
   slug: string;
-  excerpt: string;
   category: string;
   tags: string;
   featuredImage: string;
-  content: string;
   authorId: string;
   publishMode: PublishMode;
-  seoTitle: string;
-  seoDescription: string;
   canonicalUrl: string;
   noindex: boolean;
 };
@@ -53,26 +61,65 @@ type StatusState = {
   slug?: string;
 };
 
+type TranslationApiResult = {
+  title?: unknown;
+  excerpt?: unknown;
+  content?: unknown;
+  seo_title?: unknown;
+  seo_description?: unknown;
+  error?: unknown;
+};
+
+type SeoSuggestionApiResult = {
+  seo_title?: unknown;
+  seo_description?: unknown;
+  slug?: unknown;
+  tags?: unknown;
+  focus_keyword?: unknown;
+  notes?: unknown;
+  error?: unknown;
+};
+
 type PostEditorProps = {
   mode: EditorMode;
   slug?: string;
 };
 
+const initialLocalizedFields: Record<ContentLocale, LocalizedFields> = {
+  vi: {
+    title: '',
+    excerpt: '',
+    content:
+      '<h2>Bối cảnh</h2><p>Mô tả sản phẩm, vai trò người dùng, vấn đề nghiệp vụ và workflow giáo dục.</p><h2>Triển khai</h2><p>Giải thích quyết định Laravel/API/CMS/frontend, tradeoff và kết quả đo được.</p><h2>Kết quả</h2><p>Tóm tắt tác động, đánh đổi hoặc bài học.</p>',
+    seoTitle: '',
+    seoDescription: '',
+  },
+  en: {
+    title: '',
+    excerpt: '',
+    content:
+      '<h2>Context</h2><p>Describe the product, user role, business problem, and education workflow.</p><h2>Implementation</h2><p>Explain the Laravel/API/CMS/frontend decision, tradeoffs, and measurable outcome.</p><h2>Result</h2><p>Summarize the impact, tradeoff, or lesson.</p>',
+    seoTitle: '',
+    seoDescription: '',
+  },
+};
+
 const initialForm: FormState = {
-  title: '',
+  vi: initialLocalizedFields.vi,
+  en: initialLocalizedFields.en,
   slug: '',
-  excerpt: '',
   category: 'Education Tech',
   tags: 'laravel, lms, cms',
   featuredImage: '',
-  content:
-    '<h2>Context</h2><p>Describe the product, user role, business problem, and education workflow.</p><h2>Implementation</h2><p>Explain the Laravel/API/CMS/frontend decision, tradeoffs, and measurable outcome.</p><h2>Result</h2><p>Summarize the impact, tradeoff, or lesson.</p>',
   authorId: DEFAULT_AUTHOR_ID,
   publishMode: 'draft',
-  seoTitle: '',
-  seoDescription: '',
   canonicalUrl: '',
   noindex: false,
+};
+
+const languageLabels: Record<ContentLocale, string> = {
+  vi: 'Tiếng Việt',
+  en: 'English',
 };
 
 const topicSuggestions = [
@@ -88,12 +135,19 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
   const [tab, setTab] = useState<EditorTab>('content');
+  const [activeLocale, setActiveLocale] = useState<ContentLocale>('vi');
   const [isLoading, setIsLoading] = useState(mode === 'edit');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+  const [seoSuggestionNotes, setSeoSuggestionNotes] = useState<string[]>([]);
   const [status, setStatus] = useState<StatusState>({ type: 'idle', message: '' });
   const previewRef = useRef<HTMLDivElement | null>(null);
 
-  const resolvedSlug = useMemo(() => slugify(form.slug || form.title), [form.slug, form.title]);
+  const activeFields = form[activeLocale];
+  const resolvedSlug = useMemo(() => slugify(form.slug || form.vi.title || form.en.title), [form.slug, form.vi.title, form.en.title]);
+  // Tags lưu trong Supabase dưới dạng mảng, nhưng editor dùng chuỗi phân tách dấu
+  // phẩy để admin không cần thao tác UI phức tạp khi thêm/xóa nhanh.
   const tagList = useMemo(
     () =>
       form.tags
@@ -103,10 +157,30 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
         .slice(0, 12),
     [form.tags]
   );
-  const previewHtml = useMemo(() => sanitizePreviewHtml(form.content), [form.content]);
-  const seoTitle = form.seoTitle || form.title;
-  const seoDescription = form.seoDescription || form.excerpt;
-  const seoScore = useMemo(() => getSeoScore(form, resolvedSlug), [form, resolvedSlug]);
+  // HTML preview được sanitize trước khi render. Admin được tin cậy để viết bài,
+  // nhưng nội dung paste từ tool ngoài vẫn không nên chạy script trong editor.
+  const previewHtml = useMemo(() => sanitizePreviewHtml(activeFields.content), [activeFields.content]);
+  const seoTitle = activeFields.seoTitle || activeFields.title;
+  const seoDescription = activeFields.seoDescription || activeFields.excerpt;
+  // Dùng lại card blog public trong preview để lỗi hiển thị được thấy ngay khi
+  // biên tập, không phải sau khi publish.
+  const previewPost = useMemo(
+    () => buildPreviewPost(form, activeLocale, resolvedSlug, tagList, seoTitle, seoDescription),
+    [form, activeLocale, resolvedSlug, tagList, seoTitle, seoDescription]
+  );
+  const seoScore = useMemo(() => getSeoScore(activeFields, resolvedSlug), [activeFields, resolvedSlug]);
+  const languageReadiness = useMemo(() => getLanguageReadiness(form), [form]);
+  const translationTargetLocale = getOtherLocale(activeLocale);
+  const translationBlockers = useMemo(
+    () => getTranslationBlockers(activeFields, activeLocale),
+    [activeFields, activeLocale]
+  );
+  const seoSuggestionBlockers = useMemo(
+    () => getSeoSuggestionBlockers(activeFields, activeLocale),
+    [activeFields, activeLocale]
+  );
+  const targetHasDraftContent = hasAnyLocalizedContent(form[translationTargetLocale], translationTargetLocale);
+  const translationActionLabel = `${targetHasDraftContent ? 'Regenerate' : 'Generate'} ${languageLabels[translationTargetLocale]}`;
 
   useEffect(() => {
     if (mode !== 'edit' || !slug) return;
@@ -127,18 +201,30 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
 
         if (!active) return;
 
+        const viTranslation = getPostTranslation(payload, 'vi');
+        const enTranslation = getPostTranslation(payload, 'en');
+
         setForm({
-          title: payload.title,
+          vi: {
+            title: viTranslation?.title || payload.title,
+            excerpt: viTranslation?.excerpt || payload.excerpt || '',
+            content: viTranslation?.content || payload.content || initialLocalizedFields.vi.content,
+            seoTitle: viTranslation?.seo_title || payload.seo_title || '',
+            seoDescription: viTranslation?.seo_description || payload.seo_description || '',
+          },
+          en: {
+            title: enTranslation?.title || '',
+            excerpt: enTranslation?.excerpt || '',
+            content: enTranslation?.content || initialLocalizedFields.en.content,
+            seoTitle: enTranslation?.seo_title || '',
+            seoDescription: enTranslation?.seo_description || '',
+          },
           slug: payload.slug,
-          excerpt: payload.excerpt || '',
           category: payload.category || 'Education Tech',
           tags: payload.tags.join(', '),
           featuredImage: payload.featured_image || '',
-          content: payload.content || initialForm.content,
           authorId: payload.author_id || DEFAULT_AUTHOR_ID,
           publishMode: payload.published_at ? 'now' : 'draft',
-          seoTitle: payload.seo_title || '',
-          seoDescription: payload.seo_description || '',
           canonicalUrl: payload.canonical_url || '',
           noindex: Boolean(payload.noindex),
         });
@@ -163,6 +249,8 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
   useEffect(() => {
     if (!previewRef.current) return;
 
+    // Nút copy code được inject vào HTML sinh ra, nên listener đặt ở container
+    // preview thay vì gắn riêng từng button.
     const container = previewRef.current;
     const handleCopy = createCodeCopyHandler();
     container.addEventListener('click', handleCopy);
@@ -175,25 +263,232 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  function updateLocalizedField<K extends keyof LocalizedFields>(
+    locale: ContentLocale,
+    field: K,
+    value: LocalizedFields[K]
+  ) {
+    setForm((current) => ({
+      ...current,
+      [locale]: {
+        ...current[locale],
+        [field]: value,
+      },
+    }));
+  }
+
+  /**
+   * Gọi endpoint AI server-side để admin chỉ cần viết một bản ngôn ngữ.
+   *
+   * API key không bao giờ lộ ra client: UI chỉ gửi nội dung nguồn về route admin,
+   * route đó mới gọi OpenAI, sanitize kết quả rồi trả lại dữ liệu cho editor.
+   */
+  async function requestTranslation(sourceLocale: ContentLocale, currentForm: FormState = form): Promise<FormState> {
+    const targetLocale = getOtherLocale(sourceLocale);
+    const sourceFields = currentForm[sourceLocale];
+    const blockers = getTranslationBlockers(sourceFields, sourceLocale);
+
+    if (blockers.length) {
+      throw new Error(`Cannot generate ${languageLabels[targetLocale]} yet: ${blockers.join(' ')}`);
+    }
+
+    setIsTranslating(true);
+
+    try {
+      const response = await fetch('/api/admin/translate-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source_locale: sourceLocale,
+          target_locale: targetLocale,
+          title: sourceFields.title,
+          excerpt: sourceFields.excerpt,
+          content: sourceFields.content,
+          seo_title: sourceFields.seoTitle || sourceFields.title,
+          seo_description: sourceFields.seoDescription || sourceFields.excerpt,
+        }),
+      });
+
+      const result = (await response.json().catch(() => ({}))) as TranslationApiResult;
+      if (!response.ok) {
+        throw new Error(readApiError(result) || 'Could not generate the translated version.');
+      }
+
+      const translatedFields: LocalizedFields = {
+        title: readString(result.title),
+        excerpt: readString(result.excerpt),
+        content: readString(result.content),
+        seoTitle: readString(result.seo_title),
+        seoDescription: readString(result.seo_description),
+      };
+
+      if (!hasPublishableLocalizedContent(translatedFields)) {
+        throw new Error('AI translation returned incomplete content. Please retry or edit the target language manually.');
+      }
+
+      const nextForm = {
+        ...currentForm,
+        [targetLocale]: translatedFields,
+      };
+
+      setForm(nextForm);
+      setActiveLocale(targetLocale);
+      setStatus({
+        type: 'success',
+        message: `${languageLabels[targetLocale]} version generated. Review it before publishing.`,
+      });
+
+      return nextForm;
+    } finally {
+      setIsTranslating(false);
+    }
+  }
+
+  async function handleGenerateSeoSuggestions() {
+    setStatus({ type: 'idle', message: '' });
+    setSeoSuggestionNotes([]);
+
+    if (seoSuggestionBlockers.length) {
+      setStatus({
+        type: 'error',
+        message: `Cannot generate SEO suggestions yet: ${seoSuggestionBlockers.join(' ')}`,
+      });
+      return;
+    }
+
+    setIsGeneratingSeo(true);
+
+    try {
+      const response = await fetch('/api/admin/seo-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locale: activeLocale,
+          title: activeFields.title,
+          excerpt: activeFields.excerpt,
+          content: activeFields.content,
+          category: form.category,
+          tags: tagList,
+        }),
+      });
+
+      const result = (await response.json().catch(() => ({}))) as SeoSuggestionApiResult;
+      if (!response.ok) {
+        throw new Error(readApiError(result) || 'Could not generate SEO suggestions.');
+      }
+
+      const suggestedSeoTitle = readString(result.seo_title);
+      const suggestedSeoDescription = readString(result.seo_description);
+      const suggestedSlug = slugify(readString(result.slug));
+      const suggestedTags = readStringArray(result.tags);
+      const notes = readStringArray(result.notes);
+
+      if (!suggestedSeoTitle || suggestedSeoDescription.length < 60) {
+        throw new Error('AI SEO suggestions returned incomplete metadata.');
+      }
+
+      setForm((current) => ({
+        ...current,
+        slug: current.slug || suggestedSlug || resolvedSlug,
+        tags: mergeTags(current.tags, suggestedTags),
+        [activeLocale]: {
+          ...current[activeLocale],
+          seoTitle: suggestedSeoTitle,
+          seoDescription: suggestedSeoDescription,
+        },
+      }));
+      setSeoSuggestionNotes(notes);
+      setStatus({
+        type: 'success',
+        message: `SEO suggestions generated for ${languageLabels[activeLocale]}. Review them before saving.`,
+      });
+    } catch (seoError) {
+      setStatus({
+        type: 'error',
+        message: seoError instanceof Error ? seoError.message : 'Could not generate SEO suggestions.',
+      });
+    } finally {
+      setIsGeneratingSeo(false);
+    }
+  }
+
+  async function handleTranslateFromActiveLocale() {
+    setStatus({ type: 'idle', message: '' });
+
+    try {
+      await requestTranslation(activeLocale);
+    } catch (translationError) {
+      setStatus({
+        type: 'error',
+        message: translationError instanceof Error ? translationError.message : 'Could not generate the translated version.',
+      });
+    }
+  }
+
+  /**
+   * Khi admin publish mà chỉ có một bản ngôn ngữ hoàn chỉnh, hệ thống tự tạo bản
+   * còn lại trước khi gọi API lưu bài. Nếu cả hai đều chưa đủ dữ liệu thì không
+   * cố dịch để tránh publish nội dung mỏng hoặc sai ngữ cảnh.
+   */
+  async function ensureBilingualForPublish(currentForm: FormState) {
+    const readiness = getLanguageReadiness(currentForm);
+    if (readiness.vi && readiness.en) return currentForm;
+
+    const sourceLocale = findTranslationSource(currentForm);
+    if (!sourceLocale) {
+      throw new Error('Publish requires one complete language version so AI can generate the other version.');
+    }
+
+    return requestTranslation(sourceLocale, currentForm);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setStatus({ type: 'idle', message: '' });
 
+    let formToSave = form;
+
+    if (form.publishMode === 'now') {
+      try {
+        formToSave = await ensureBilingualForPublish(form);
+      } catch (translationError) {
+        setStatus({
+          type: 'error',
+          message: translationError instanceof Error ? translationError.message : 'Could not prepare the bilingual post.',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    const payloadSlug = slugify(formToSave.slug || formToSave.vi.title || formToSave.en.title);
+    const payloadTags = formToSave.tags
+      .split(',')
+      .map((tag) => tag.trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 12);
+
+    // Chuẩn hóa state editor sang contract của API. Validation và sanitize cuối
+    // cùng vẫn nằm ở route layer; UI chỉ tập trung vào trải nghiệm biên tập.
     const payload = {
-      title: form.title,
-      slug: resolvedSlug,
-      excerpt: form.excerpt,
-      category: form.category,
-      tags: tagList,
-      featured_image: form.featuredImage || null,
-      content: form.content,
-      author_id: form.authorId,
-      published_at: form.publishMode === 'now' ? 'now' : null,
-      seo_title: seoTitle,
-      seo_description: seoDescription,
-      canonical_url: form.canonicalUrl || null,
-      noindex: form.noindex,
+      title: formToSave.vi.title,
+      slug: payloadSlug,
+      excerpt: formToSave.vi.excerpt,
+      category: formToSave.category,
+      tags: payloadTags,
+      featured_image: formToSave.featuredImage || null,
+      content: formToSave.vi.content,
+      author_id: formToSave.authorId,
+      published_at: formToSave.publishMode === 'now' ? 'now' : null,
+      seo_title: formToSave.vi.seoTitle || formToSave.vi.title,
+      seo_description: formToSave.vi.seoDescription || formToSave.vi.excerpt,
+      canonical_url: formToSave.canonicalUrl || null,
+      noindex: formToSave.noindex,
+      translations: {
+        vi: toTranslationPayload('vi', formToSave.vi),
+        en: toTranslationPayload('en', formToSave.en),
+      },
     };
 
     try {
@@ -211,7 +506,7 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
         throw new Error(result.error || 'Could not save this post.');
       }
 
-      const savedSlug = result.slug || resolvedSlug;
+      const savedSlug = result.slug || payloadSlug;
       setStatus({
         type: 'success',
         message: mode === 'edit' ? 'Post updated successfully.' : 'Post created successfully.',
@@ -300,15 +595,21 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
               </div>
 
               <div className="p-5 sm:p-6">
+                <LanguageSwitcher
+                  activeLocale={activeLocale}
+                  readiness={languageReadiness}
+                  onChange={setActiveLocale}
+                />
+
                 {tab === 'content' && (
                   <div className="grid gap-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="grid gap-2">
-                        <span className="text-sm font-medium text-[var(--text)]">Title</span>
+                        <span className="text-sm font-medium text-[var(--text)]">Title ({languageLabels[activeLocale]})</span>
                         <Input
-                          value={form.title}
-                          onChange={(event) => updateField('title', event.target.value)}
-                          placeholder="Lessons from building an LMS in Laravel"
+                          value={activeFields.title}
+                          onChange={(event) => updateLocalizedField(activeLocale, 'title', event.target.value)}
+                          placeholder={activeLocale === 'vi' ? 'Bài học khi xây LMS bằng Laravel' : 'Lessons from building an LMS in Laravel'}
                           required
                         />
                       </label>
@@ -323,10 +624,10 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                     </div>
 
                     <label className="grid gap-2">
-                      <span className="text-sm font-medium text-[var(--text)]">Excerpt</span>
+                      <span className="text-sm font-medium text-[var(--text)]">Excerpt ({languageLabels[activeLocale]})</span>
                       <Textarea
-                        value={form.excerpt}
-                        onChange={(event) => updateField('excerpt', event.target.value)}
+                        value={activeFields.excerpt}
+                        onChange={(event) => updateLocalizedField(activeLocale, 'excerpt', event.target.value)}
                         placeholder="A short summary for cards, search, and metadata."
                         rows={3}
                         required
@@ -374,10 +675,10 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                     </div>
 
                     <div className="grid gap-2">
-                      <span className="text-sm font-medium text-[var(--text)]">Content</span>
+                      <span className="text-sm font-medium text-[var(--text)]">Content ({languageLabels[activeLocale]})</span>
                       <RichPostEditor
-                        value={form.content}
-                        onChange={(content) => updateField('content', content)}
+                        value={activeFields.content}
+                        onChange={(content) => updateLocalizedField(activeLocale, 'content', content)}
                         featuredImage={form.featuredImage}
                       />
                     </div>
@@ -406,15 +707,50 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                       </ul>
                     </div>
 
+                    <div className="rounded-lg border border-[rgba(102,217,194,0.25)] bg-[rgba(102,217,194,0.06)] p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-[var(--text)]">AI SEO suggestions</p>
+                          <p className="mt-1 text-xs leading-relaxed text-[var(--text-soft)]">
+                            Generate a search-friendly title, meta description, slug, and tag suggestions for {languageLabels[activeLocale]}.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isSubmitting || isTranslating || isGeneratingSeo}
+                          onClick={handleGenerateSeoSuggestions}
+                        >
+                          {isGeneratingSeo ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                          {isGeneratingSeo ? 'Generating...' : 'Suggest SEO'}
+                        </Button>
+                      </div>
+                      {seoSuggestionBlockers.length > 0 && (
+                        <ul className="mt-3 space-y-1 text-xs leading-relaxed text-[var(--amber)]">
+                          {seoSuggestionBlockers.map((blocker) => (
+                            <li key={blocker}>- {blocker}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {seoSuggestionNotes.length > 0 && (
+                        <ul className="mt-3 space-y-1 text-xs leading-relaxed text-[var(--text-muted)]">
+                          {seoSuggestionNotes.map((note) => (
+                            <li key={note}>- {note}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
                     <label className="grid gap-2">
                       <span className="flex items-center justify-between gap-3 text-sm font-medium text-[var(--text)]">
                         SEO title
                         <span className="text-xs text-[var(--text-soft)]">{seoTitle.length}/60 recommended</span>
                       </span>
                       <Input
-                        value={form.seoTitle}
-                        onChange={(event) => updateField('seoTitle', event.target.value)}
-                        placeholder={form.title || 'SEO title'}
+                        value={activeFields.seoTitle}
+                        onChange={(event) => updateLocalizedField(activeLocale, 'seoTitle', event.target.value)}
+                        placeholder={activeFields.title || 'SEO title'}
                       />
                     </label>
 
@@ -424,9 +760,9 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                         <span className="text-xs text-[var(--text-soft)]">{seoDescription.length}/155 recommended</span>
                       </span>
                       <Textarea
-                        value={form.seoDescription}
-                        onChange={(event) => updateField('seoDescription', event.target.value)}
-                        placeholder={form.excerpt || 'Search result description'}
+                        value={activeFields.seoDescription}
+                        onChange={(event) => updateLocalizedField(activeLocale, 'seoDescription', event.target.value)}
+                        placeholder={activeFields.excerpt || 'Search result description'}
                         rows={4}
                       />
                     </label>
@@ -460,8 +796,15 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                 {tab === 'preview' && (
                   <div className="grid gap-5">
                     <div className="rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.035)] p-5">
+                      <p className="micro-label mb-4">Blog Card Preview</p>
+                      <div className="mx-auto max-w-md">
+                        <PostCard post={previewPost} index={0} />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.035)] p-5">
                       <p className="micro-label mb-2">Search Preview</p>
-                      <p className="text-xs text-[var(--accent)]">shadowdev.dev/blog/{resolvedSlug || 'post-slug'}</p>
+                      <p className="text-xs text-[var(--accent)]">shadowdev.dev/{activeLocale}/blog/{resolvedSlug || 'post-slug'}</p>
                       <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">{seoTitle || 'Untitled post'}</h2>
                       <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
                         {seoDescription || 'Meta description preview appears here.'}
@@ -479,8 +822,8 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                           </span>
                         ))}
                       </div>
-                      <h2 className="text-3xl font-bold text-[var(--text)]">{form.title || 'Untitled post'}</h2>
-                      <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{form.excerpt || 'Excerpt preview appears here.'}</p>
+                      <h2 className="text-3xl font-bold text-[var(--text)]">{activeFields.title || 'Untitled post'}</h2>
+                      <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{activeFields.excerpt || 'Excerpt preview appears here.'}</p>
                       <div
                         ref={previewRef}
                         className="prose prose-invert mt-6 max-w-none text-sm text-[var(--text-muted)]"
@@ -515,8 +858,52 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                   ))}
                 </div>
                 <p className="mt-3 text-xs leading-relaxed text-[var(--text-soft)]">
-                  Drafts stay hidden from public API requests. Published posts become public unless noindex is enabled.
+                  Drafts stay hidden from public API requests. Published posts require both Vietnamese and English content.
                 </p>
+                {form.publishMode === 'now' && (!languageReadiness.vi || !languageReadiness.en) && (
+                  <p className="mt-3 rounded-lg border border-[rgba(231,182,90,0.32)] bg-[rgba(231,182,90,0.08)] p-3 text-xs leading-relaxed text-[var(--amber)]">
+                    Publish will generate the missing language automatically if one version is complete.
+                  </p>
+                )}
+              </div>
+
+              <div className="surface-card-subtle p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Sparkles size={17} className="text-[var(--accent)]" />
+                  <h2 className="font-semibold text-[var(--text)]">AI translation</h2>
+                </div>
+                <p className="text-xs leading-relaxed text-[var(--text-soft)]">
+                  Use {languageLabels[activeLocale]} as the source and fill {languageLabels[translationTargetLocale]}. HTML, code blocks,
+                  commands, API names, and file paths are kept unchanged.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4 w-full"
+                  disabled={isSubmitting || isTranslating || isGeneratingSeo}
+                  onClick={handleTranslateFromActiveLocale}
+                >
+                  {isTranslating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                  {isTranslating
+                    ? 'Generating...'
+                    : translationActionLabel}
+                </Button>
+                {translationBlockers.length > 0 && (
+                  <ul className="mt-3 space-y-1 text-xs leading-relaxed text-[var(--amber)]">
+                    {translationBlockers.map((blocker) => (
+                      <li key={blocker}>- {blocker}</li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-3 text-xs leading-relaxed text-[var(--text-soft)]">
+                  Drafts are not translated on every keystroke to avoid latency, AI cost, and overwriting manual edits. Generate when the
+                  source draft is ready; publish also auto-generates the missing language if one version is complete.
+                </p>
+                {targetHasDraftContent && (
+                  <p className="mt-3 rounded-lg border border-[rgba(231,182,90,0.28)] bg-[rgba(231,182,90,0.08)] p-3 text-xs leading-relaxed text-[var(--amber)]">
+                    Regenerating will replace the current {languageLabels[translationTargetLocale]} draft in this editor.
+                  </p>
+                )}
               </div>
 
               <div className="surface-card-subtle p-5">
@@ -559,7 +946,7 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
                 </div>
               )}
 
-              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting || isTranslating || isGeneratingSeo}>
                 {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create post'}
               </Button>
@@ -571,12 +958,171 @@ export default function PostEditor({ mode, slug }: PostEditorProps) {
   );
 }
 
-function getSeoScore(form: FormState, slug: string) {
+function LanguageSwitcher({
+  activeLocale,
+  readiness,
+  onChange,
+}: {
+  activeLocale: ContentLocale;
+  readiness: Record<ContentLocale, boolean>;
+  onChange: (locale: ContentLocale) => void;
+}) {
+  return (
+    <div className="mb-5 rounded-lg border border-[var(--line)] bg-[rgba(244,241,232,0.035)] p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="micro-label mb-1">Bilingual CMS</p>
+          <p className="text-xs text-[var(--text-soft)]">
+            Soạn một ngôn ngữ trước, dùng AI để tạo bản còn lại rồi review trước khi publish.
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {(['vi', 'en'] as const).map((locale) => (
+          <button
+            key={locale}
+            type="button"
+            onClick={() => onChange(locale)}
+            className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${
+              activeLocale === locale
+                ? 'border-[rgba(102,217,194,0.45)] bg-[rgba(102,217,194,0.14)] text-[var(--accent)]'
+                : 'border-[var(--line)] text-[var(--text-muted)] hover:text-[var(--text)]'
+            }`}
+          >
+            <span>{languageLabels[locale]}</span>
+            <span className={readiness[locale] ? 'text-[var(--accent)]' : 'text-[var(--amber)]'}>
+              {readiness[locale] ? 'Ready' : 'Draft'}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getLanguageReadiness(form: FormState): Record<ContentLocale, boolean> {
+  return {
+    vi: hasPublishableLocalizedContent(form.vi, 'vi'),
+    en: hasPublishableLocalizedContent(form.en, 'en'),
+  };
+}
+
+function hasPublishableLocalizedContent(fields: LocalizedFields, locale?: ContentLocale) {
+  return getTranslationBlockers(fields, locale).length === 0;
+}
+
+function getTranslationBlockers(fields: LocalizedFields, locale?: ContentLocale) {
+  const blockers: string[] = [];
+  const contentText = getContentText(fields.content);
+
+  if (!fields.title.trim()) blockers.push('Title is required.');
+  if (fields.excerpt.trim().length < 20) blockers.push('Excerpt needs at least 20 characters.');
+  if (contentText.length < 20 || isInitialTemplateContent(fields.content, locale)) {
+    blockers.push('Body content needs real article text, not the starter template.');
+  }
+
+  return blockers;
+}
+
+function getSeoSuggestionBlockers(fields: LocalizedFields, locale: ContentLocale) {
+  const blockers: string[] = [];
+  const contentText = getContentText(fields.content);
+
+  if (!fields.title.trim()) blockers.push('Title is required for SEO suggestions.');
+  if (fields.excerpt.trim().length < 20 && contentText.length < 80) {
+    blockers.push('Add a useful excerpt or at least 80 characters of body content.');
+  }
+  if (isInitialTemplateContent(fields.content, locale)) {
+    blockers.push('Replace the starter template before generating SEO suggestions.');
+  }
+
+  return blockers;
+}
+
+function hasAnyLocalizedContent(fields: LocalizedFields, locale: ContentLocale) {
+  return Boolean(
+    fields.title.trim() ||
+      fields.excerpt.trim() ||
+      fields.seoTitle.trim() ||
+      fields.seoDescription.trim() ||
+      (getContentText(fields.content) && !isInitialTemplateContent(fields.content, locale))
+  );
+}
+
+function getContentText(value: string) {
+  return value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function isInitialTemplateContent(value: string, locale?: ContentLocale) {
+  if (!locale) return false;
+  return normalizeHtmlForComparison(value) === normalizeHtmlForComparison(initialLocalizedFields[locale].content);
+}
+
+function normalizeHtmlForComparison(value: string) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function getOtherLocale(locale: ContentLocale): ContentLocale {
+  return locale === 'vi' ? 'en' : 'vi';
+}
+
+function findTranslationSource(form: FormState): ContentLocale | null {
+  const readiness = getLanguageReadiness(form);
+  if (readiness.vi && !readiness.en) return 'vi';
+  if (readiness.en && !readiness.vi) return 'en';
+  return null;
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function readStringArray(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function readApiError(value: { error?: unknown }) {
+  return typeof value.error === 'string' ? value.error : '';
+}
+
+function mergeTags(currentTags: string, suggestedTags: string[]) {
+  const merged = [
+    ...currentTags.split(',').map((tag) => tag.trim().toLowerCase()),
+    ...suggestedTags.map((tag) => tag.trim().toLowerCase()),
+  ].filter(Boolean);
+
+  return [...new Set(merged)].slice(0, 12).join(', ');
+}
+
+function toTranslationPayload(locale: ContentLocale, fields: LocalizedFields) {
+  return {
+    locale,
+    title: fields.title,
+    excerpt: fields.excerpt,
+    content: fields.content,
+    seo_title: fields.seoTitle || fields.title,
+    seo_description: fields.seoDescription || fields.excerpt,
+  };
+}
+
+function getPostTranslation(post: Post, locale: ContentLocale): PostTranslation | undefined {
+  const translations = post.post_translations || post.translations || [];
+  return translations.find((translation) => translation.locale === locale);
+}
+
+function getSeoScore(fields: LocalizedFields, slug: string) {
+  // Điểm SEO chỉ là hướng dẫn biên tập, không phải cam kết thứ hạng search engine.
+  // Mục tiêu là bắt metadata thiếu trước khi publish và giữ bài viết nhất quán.
   let score = 0;
   const notes: string[] = [];
-  const title = form.seoTitle || form.title;
-  const description = form.seoDescription || form.excerpt;
-  const wordCount = form.content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  const title = fields.seoTitle || fields.title;
+  const description = fields.seoDescription || fields.excerpt;
+  const wordCount = fields.content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
 
   if (title.length >= 30 && title.length <= 60) {
     score += 25;
@@ -599,22 +1145,8 @@ function getSeoScore(form: FormState, slug: string) {
     notes.push('Keep the slug short and readable.');
   }
 
-  if (form.featuredImage) {
-    score += 10;
-    notes.push('Featured image is set for cards and sharing.');
-  } else {
-    notes.push('Add a featured image for share previews.');
-  }
-
-  if (form.category && form.tags.split(',').filter((tag) => tag.trim()).length >= 2) {
-    score += 15;
-    notes.push('Category and tags support discovery.');
-  } else {
-    notes.push('Use one clear category and at least two tags.');
-  }
-
   if (wordCount >= 250) {
-    score += 10;
+    score += 35;
     notes.push('Content has enough depth for a useful article.');
   } else {
     notes.push('Add more depth before publishing.');
@@ -635,7 +1167,48 @@ function isPostPayload(value: Post | { error?: string } | null): value is Post {
   );
 }
 
+/**
+ * Tạo object có shape `Post` cho card preview trong admin.
+ *
+ * Component card public kỳ vọng contract giống API trả về. Dùng lại ở đây giúp
+ * preview admin phản ánh đúng thực tế: nếu layout card public đổi, preview editor
+ * cũng đổi theo thay vì bị lệch.
+ */
+function buildPreviewPost(
+  form: FormState,
+  locale: ContentLocale,
+  slug: string,
+  tags: string[],
+  seoTitle: string,
+  seoDescription: string
+): Post {
+  const now = new Date().toISOString();
+  const fields = form[locale];
+
+  return {
+    id: 'preview-post',
+    title: fields.title || 'Untitled post',
+    slug: slug || 'post-slug',
+    content: fields.content || '',
+    excerpt: fields.excerpt || 'Excerpt preview appears here.',
+    featured_image: form.featuredImage || null,
+    seo_title: seoTitle || null,
+    seo_description: seoDescription || null,
+    canonical_url: form.canonicalUrl || null,
+    noindex: form.noindex,
+    author_id: form.authorId || DEFAULT_AUTHOR_ID,
+    category: form.category || 'Category',
+    tags,
+    published_at: now,
+    created_at: now,
+    updated_at: now,
+    view_count: 0,
+  };
+}
+
 function sanitizePreviewHtml(value: string) {
+  // Mirror đủ gần với sanitizer ở route để preview admin an toàn. API vẫn sanitize
+  // lần cuối trước khi ghi nội dung vào Supabase.
   return enhanceCodeBlocks(value)
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')

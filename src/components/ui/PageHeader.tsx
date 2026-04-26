@@ -4,6 +4,12 @@ import { motion } from "framer-motion";
 import Section from "@/components/ui/Section";
 import { commonCopy, useLanguage } from "@/lib/i18n";
 
+/**
+ * Header chuẩn cho các trang nội dung public.
+ *
+ * Component này chỉ nhận title/description đã được page localize sẵn, còn micro
+ * label lấy từ i18n để giữ giọng thương hiệu thống nhất.
+ */
 export default function PageHeader({
   title,
   description,

@@ -21,6 +21,13 @@ import Section from '@/components/ui/Section';
 import { commonCopy, useLanguage } from '@/lib/i18n';
 import { localizedPath } from '@/lib/locales';
 
+/**
+ * Trang projects/case-study map.
+ *
+ * Hiện tại đây là trang định vị năng lực, chưa phải case study chi tiết từng dự
+ * án. Dữ liệu được mô hình hóa thành mảng để sau này dễ tách thành CMS hoặc trang
+ * `/projects/[slug]` mà không viết lại layout.
+ */
 export default function ProjectsPage() {
   const { locale } = useLanguage();
   const common = commonCopy[locale];

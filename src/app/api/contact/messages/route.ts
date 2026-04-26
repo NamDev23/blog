@@ -5,6 +5,13 @@ import { ensureSupabaseConfigured } from '@/lib/supabaseRoute';
 
 const messageStatuses = new Set(['new', 'read', 'archived']);
 
+/**
+ * GET /api/contact/messages
+ * Inbox tin nhắn liên hệ cho admin dashboard.
+ *
+ * API luôn yêu cầu admin session/API key, trả `private, no-store` và hỗ trợ
+ * pagination để dashboard không tải toàn bộ hòm thư khi dữ liệu tăng.
+ */
 export async function GET(request: NextRequest) {
   try {
     const unauthorized = requireAdmin(request);
@@ -20,6 +27,7 @@ export async function GET(request: NextRequest) {
     const withMeta = searchParams.get('meta') === 'true';
     const offset = (page - 1) * limit;
 
+    // Status filter dùng allowlist để request lạ không làm hỏng query.
     let query = supabaseAdmin
       .from('contact_messages')
       .select('*', withMeta ? { count: 'exact' } : undefined)
@@ -61,6 +69,7 @@ export async function GET(request: NextRequest) {
 }
 
 function contactInboxUnavailable() {
+  // Thông báo rõ migration/schema cần áp dụng để admin biết cách xử lý khi DB thiếu bảng.
   return jsonResponse(
     {
       code: 'contact_inbox_unavailable',

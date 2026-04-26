@@ -6,6 +6,12 @@ import PageHeader from '@/components/ui/PageHeader';
 import { siteConfig } from '@/lib/site';
 import { useLanguage } from '@/lib/i18n';
 
+/**
+ * Trang chính sách quyền riêng tư.
+ *
+ * Nội dung được mô hình hóa thành các section để bản VI/EN giữ cùng cấu trúc.
+ * Khi thêm mục mới, thêm cùng vị trí ở cả hai locale để tránh hai bản lệch nghĩa.
+ */
 export default function PrivacyPage() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'
@@ -125,8 +131,6 @@ export default function PrivacyPage() {
       };
   return (
     <>
-      {/* Page Header */}
-      {/* Page Header */}
       <PageHeader
         title={copy.title}
         description={copy.description}

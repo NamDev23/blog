@@ -1,3 +1,11 @@
+/**
+ * Tăng trải nghiệm cho code block trong bài viết.
+ *
+ * Content bài viết được lưu dưới dạng HTML. Hàm này bọc mỗi `<pre><code>` bằng UI
+ * terminal có thanh tiêu đề và nút copy mà không cần tác giả viết markup thủ công
+ * trong từng bài. Thuộc tính `data-code-terminal` giúp tránh bọc lặp khi preview
+ * hoặc render lại nhiều lần.
+ */
 export function enhanceCodeBlocks(content: string) {
   return content.replace(
     /<pre([^>]*)>([\s\S]*?)<\/pre>/gi,
@@ -13,6 +21,8 @@ export function enhanceCodeBlocks(content: string) {
 }
 
 export function createCodeCopyHandler() {
+  // Dùng event delegation để một listener xử lý mọi nút copy trong article,
+  // kể cả code block được render từ HTML động.
   return async (event: Event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -46,6 +56,7 @@ export function createCodeCopyHandler() {
 }
 
 function getCodeBlockTitle(attributes: string) {
+  // Tiêu đề dựa vào class language-* do editor/markdown highlighter sinh ra.
   const normalized = attributes.toLowerCase();
   if (/language-(bash|sh|shell|zsh|terminal|console)/.test(normalized)) return 'Terminal';
   if (/language-(yaml|yml)/.test(normalized)) return 'YAML';
@@ -62,6 +73,8 @@ function getCodeBlockTitle(attributes: string) {
 }
 
 async function copyText(value: string) {
+  // Clipboard API chỉ hoạt động trong secure context; fallback textarea giữ tính
+  // năng copy chạy được ở local/dev hoặc trình duyệt cũ.
   if (navigator.clipboard && window.isSecureContext) {
     await navigator.clipboard.writeText(value);
     return;

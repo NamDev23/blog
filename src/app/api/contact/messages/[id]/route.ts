@@ -9,6 +9,13 @@ type MessageUpdateBody = {
 
 const allowedStatuses = new Set(['new', 'read', 'archived']);
 
+/**
+ * PATCH /api/contact/messages/[id]
+ * Cập nhật trạng thái xử lý tin nhắn trong admin inbox.
+ *
+ * Status dùng enum mềm (`new`, `read`, `archived`) để dashboard có thể lọc nhanh
+ * mà chưa cần hệ thống ticket phức tạp.
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,6 +31,7 @@ export async function PATCH(
     const body = (await request.json()) as MessageUpdateBody;
     const status = sanitizeText(body.status, 20);
 
+    // Allowlist tránh ghi trạng thái tùy ý vào DB và giữ UI filter nhất quán.
     if (!allowedStatuses.has(status)) {
       return jsonResponse(
         { code: 'invalid_message_status', error: 'status must be new, read, or archived' },
@@ -63,6 +71,7 @@ export async function DELETE(
     if (unavailable) return unavailable;
 
     const { id } = await params;
+    // Hiện tại delete là xóa cứng. Nếu cần audit trail, đổi sang archived/deleted_at.
     const { error } = await supabaseAdmin
       .from('contact_messages')
       .delete()

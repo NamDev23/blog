@@ -7,6 +7,12 @@ import PageHeader from '@/components/ui/PageHeader';
 import { siteConfig } from '@/lib/site';
 import { useLanguage } from '@/lib/i18n';
 
+/**
+ * Trang giới thiệu public.
+ *
+ * Nội dung được giữ trong component vì đây là copy profile ngắn, không cần CMS.
+ * Mỗi nhánh locale chứa cùng cấu trúc dữ liệu để layout không phải rẽ nhánh phức tạp.
+ */
 export default function AboutPage() {
   const { locale } = useLanguage();
   const copy = locale === 'vi'
@@ -110,8 +116,6 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* Page Header */}
-      {/* Page Header */}
       <PageHeader
         title={copy.pageTitle}
         description={copy.pageDescription}
@@ -139,7 +143,7 @@ export default function AboutPage() {
               </div>
             </motion.div>
 
-            {/* Image */}
+            {/* Khối nhận diện dùng chữ thay ảnh cá nhân để tránh phụ thuộc asset ngoài. */}
             <motion.div
               variants={itemVariants}
               className="relative"

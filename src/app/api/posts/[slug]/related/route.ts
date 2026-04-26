@@ -1,22 +1,26 @@
 import { NextRequest } from 'next/server';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { clampLimit, jsonResponse } from '@/lib/security';
+import { isMissingPostTranslationsRelation, POST_SELECT_WITH_TRANSLATIONS } from '@/lib/postTranslationStorage';
 import { canUseMockApiFallback, getMockRelatedPosts } from '@/lib/mockApi';
 import {
   ensureSupabaseConfigured,
   isSupabaseNotFoundError,
   supabaseFailureResponse,
 } from '@/lib/supabaseRoute';
+import type { Post } from '@/types';
 
 /**
  * GET /api/posts/[slug]/related
- * Lấy bài viết liên quan dựa trên tags và category
- * Algorithm:
- * 1. Lấy post hiện tại
- * 2. Tìm posts có cùng tags (ưu tiên)
- * 3. Tìm posts có cùng category
- * 4. Sắp xếp theo số lượng tags trùng khớp
- * 5. Giới hạn số lượng kết quả
+ * Lấy bài viết liên quan dựa trên tags và category.
+ *
+ * Thuật toán hiện tại ưu tiên tính dễ hiểu:
+ * - cùng category: +10 điểm;
+ * - mỗi tag trùng: +5 điểm;
+ * - nếu chưa đủ số lượng thì bù bằng bài mới nhất.
+ *
+ * Khi dữ liệu lớn hơn, nên chuyển scoring này thành SQL/RPC để không phải kéo
+ * toàn bộ bài viết về server trước khi sort.
  */
 export async function GET(
   request: NextRequest,
@@ -37,7 +41,7 @@ export async function GET(
       if (unavailable) return unavailable;
     }
 
-    // 1. Lấy post hiện tại
+    // Lấy tín hiệu của bài hiện tại trước, sau đó mới query danh sách ứng viên.
     const { data: currentPost, error: currentError } = await supabase
       .from('posts')
       .select('id, category, tags')
@@ -57,14 +61,21 @@ export async function GET(
       return jsonResponse({ error: 'Post not found' }, { status: 404 }, 'public, max-age=120');
     }
 
-    // 2. Lấy tất cả posts khác (đã publish)
-    const { data: allPosts, error: postsError } = await supabase
-      .from('posts')
-      .select('*')
-      .neq('id', currentPost.id)
-      .not('published_at', 'is', null)
-      .lte('published_at', new Date().toISOString())
-      .order('published_at', { ascending: false });
+    // Chỉ bài đã publish mới được xuất hiện trong related posts public.
+    const buildRelatedQuery = (selectFields: string) =>
+      supabase
+        .from('posts')
+        .select(selectFields)
+        .neq('id', currentPost.id)
+        .not('published_at', 'is', null)
+        .lte('published_at', new Date().toISOString())
+        .order('published_at', { ascending: false });
+
+    let { data: allPosts, error: postsError } = await buildRelatedQuery(POST_SELECT_WITH_TRANSLATIONS);
+
+    if (postsError && isMissingPostTranslationsRelation(postsError)) {
+      ({ data: allPosts, error: postsError } = await buildRelatedQuery('*'));
+    }
 
     if (postsError) {
       if (canUseMockApiFallback()) {
@@ -75,25 +86,26 @@ export async function GET(
       return supabaseFailureResponse(postsError);
     }
 
-    if (!allPosts || allPosts.length === 0) {
+    type ScoredPost = Post & { relevanceScore: number; matchingTags: number };
+    const candidatePosts = (allPosts || []) as unknown as Post[];
+
+    if (candidatePosts.length === 0) {
       return jsonResponse([], {}, 'public, max-age=120');
     }
 
-    // 3. Tính điểm relevance cho mỗi post
-    const postsWithScore = allPosts.map(post => {
+    const postsWithScore: ScoredPost[] = candidatePosts.map(post => {
       let score = 0;
 
-      // Cùng category: +10 điểm
+      // Category là tín hiệu rộng nhưng ổn định.
       if (post.category === currentPost.category) {
         score += 10;
       }
 
-      // Tính số tags trùng khớp
       const currentTags = (currentPost.tags || []) as string[];
       const postTags = (post.tags || []) as string[];
       const matchingTags = currentTags.filter(tag => postTags.includes(tag));
       
-      // Mỗi tag trùng: +5 điểm
+      // Tag là tín hiệu cụ thể hơn nên cộng theo số lượng trùng.
       score += matchingTags.length * 5;
 
       return {
@@ -103,36 +115,38 @@ export async function GET(
       };
     });
 
-    // 4. Sắp xếp theo điểm relevance (cao nhất trước)
     const sortedPosts = postsWithScore
-      .filter(post => post.relevanceScore > 0) // Chỉ lấy posts có điểm > 0
+      .filter(post => post.relevanceScore > 0)
       .sort((a, b) => {
-        // Ưu tiên điểm cao hơn
         if (b.relevanceScore !== a.relevanceScore) {
           return b.relevanceScore - a.relevanceScore;
         }
-        // Nếu điểm bằng nhau, ưu tiên bài mới hơn
         return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
       });
 
-    // 5. Nếu không đủ posts có relevance, thêm posts mới nhất
-    let relatedPosts = sortedPosts.slice(0, limit);
+    // Nếu không đủ bài cùng chủ đề, bù bằng bài mới nhất để UI không bị trống.
+    let relatedPosts: ScoredPost[] = sortedPosts.slice(0, limit);
     
     if (relatedPosts.length < limit) {
       const remainingCount = limit - relatedPosts.length;
-      const recentPosts = allPosts
+      const recentPosts = candidatePosts
         .filter(post => !relatedPosts.find(rp => rp.id === post.id))
-        .slice(0, remainingCount);
+        .slice(0, remainingCount)
+        .map((post) => ({
+          ...post,
+          relevanceScore: 0,
+          matchingTags: 0,
+        }));
       
       relatedPosts = [...relatedPosts, ...recentPosts];
     }
 
-    // 6. Remove relevanceScore và matchingTags trước khi return
+    // Không trả metadata scoring ra public API vì client không cần biết chi tiết này.
     const cleanedPosts = relatedPosts.map((post) => {
-      const cleanedPost = { ...post };
+      const cleanedPost = { ...post } as Partial<ScoredPost>;
       delete cleanedPost.relevanceScore;
       delete cleanedPost.matchingTags;
-      return cleanedPost;
+      return cleanedPost as Post;
     });
 
     return jsonResponse(cleanedPosts, {}, 'public, max-age=120, s-maxage=600, stale-while-revalidate=900');

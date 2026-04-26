@@ -11,6 +11,13 @@ import { siteConfig } from '@/lib/site';
 import { commonCopy, navigationLabels, useLanguage } from '@/lib/i18n';
 import { localizedPath, stripLocaleFromPathname, switchLocalePath } from '@/lib/locales';
 
+/**
+ * Header public của website.
+ *
+ * Header đọc locale từ `LanguageProvider`, tự localize link và đổi route khi người
+ * dùng chuyển VI/EN. Admin path trả `null` để dashboard không bị bọc bởi navigation
+ * public và giữ trải nghiệm console riêng.
+ */
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,6 +34,7 @@ export default function Header() {
   }));
 
   useEffect(() => {
+    // Thay đổi nền khi scroll để header nổi rõ trên hero nhưng vẫn nhẹ trên mobile.
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -35,6 +43,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   const changeLocale = (nextLocale: typeof locale) => {
+    // Cập nhật preference client rồi push sang URL cùng page với locale mới.
     setLocale(nextLocale);
     router.push(switchLocalePath(pathname || '/', nextLocale));
   };
@@ -52,6 +61,10 @@ export default function Header() {
       transition: { duration: 0.2 },
     },
   };
+
+  if (activePathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <header
@@ -127,7 +140,7 @@ export default function Header() {
           </motion.button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile navigation dùng AnimatePresence để đóng/mở mượt nhưng không giữ DOM dư. */}
         <AnimatePresence>
           {isOpen && (
             <motion.div

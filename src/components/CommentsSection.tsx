@@ -12,7 +12,11 @@ interface CommentsSectionProps {
 }
 
 /**
- * Section hiển thị comments và form
+ * Section bình luận của bài viết.
+ *
+ * Chỉ yêu cầu comment `approved=true`, nên mọi bình luận mới gửi sẽ chờ admin
+ * duyệt trước khi xuất hiện. `refetch` được truyền xuống form để cập nhật danh
+ * sách sau khi gửi thành công.
  */
 export default function CommentsSection({ postId }: CommentsSectionProps) {
   const { locale } = useLanguage();
@@ -33,12 +37,12 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
       };
   const { comments, loading, error, refetch } = useComments({
     postId,
-    approved: true, // Chỉ hiển thị comments đã được approve
+    approved: true, // Chỉ hiển thị comment đã duyệt ở public article page.
   });
 
   return (
     <div className="mt-12 sm:mt-16 pt-12 sm:pt-16 border-t border-[var(--line)]">
-      {/* Header */}
+      {/* Header hiển thị số comment đã được duyệt, không tính comment đang pending. */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -62,7 +66,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
         </p>
       </motion.div>
 
-      {/* Comments List */}
+      {/* Danh sách trạng thái được tách rõ để tránh vừa hiện loading vừa hiện empty. */}
       <div className="space-y-6 mb-8 sm:mb-10">
         {/* Loading State */}
         {loading && (
@@ -115,7 +119,7 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
         )}
       </div>
 
-      {/* Comment Form */}
+      {/* Form nằm sau danh sách để người đọc thấy thảo luận hiện có trước khi gửi. */}
       <CommentForm postId={postId} onCommentAdded={refetch} />
     </div>
   );

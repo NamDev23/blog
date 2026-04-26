@@ -14,8 +14,10 @@ interface UseTagsReturn {
 }
 
 /**
- * Custom hook để fetch tags từ API
- * Fallback to mock data nếu API không hoạt động
+ * Hook lấy tag cloud/tag filter cho UI client.
+ *
+ * API trả `{ name, count }` đã được tính từ bài public. Fallback tự đếm từ mock
+ * posts để trang tags vẫn có dữ liệu kiểm tra trong local development.
  */
 export function useTags(): UseTagsReturn {
   const [tags, setTags] = useState<Tag[]>([]);
@@ -39,7 +41,7 @@ export function useTags(): UseTagsReturn {
         const data = await response.json();
         setTags(data);
       } catch (fetchErr) {
-        // Fallback to mock data
+        // Fallback local development khi Supabase/API chưa sẵn sàng.
         console.warn('Using mock data - Supabase not configured or API error:', fetchErr);
 
         const tagCounts: Record<string, number> = {};
@@ -74,4 +76,3 @@ export function useTags(): UseTagsReturn {
     refetch: fetchTags,
   };
 }
-

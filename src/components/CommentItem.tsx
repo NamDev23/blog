@@ -11,11 +11,14 @@ interface CommentItemProps {
 }
 
 /**
- * Component hiển thị một comment
+ * Hiển thị một comment đã được API trả về.
+ *
+ * Public API không gửi `author_email`, vì vậy component chỉ render tên, ngày và
+ * nội dung. Avatar chữ cái được tạo deterministically từ tên để không cần lưu ảnh.
  */
 export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
   const { locale } = useLanguage();
-  // Get initials from author name
+  // Lấy tối đa hai chữ cái đầu để avatar vẫn gọn với tên dài.
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -25,7 +28,7 @@ export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
       .slice(0, 2);
   };
 
-  // Generate avatar color based on name
+  // Màu avatar dựa trên ký tự đầu, giúp cùng một người nhìn nhất quán giữa renders.
   const getAvatarColor = (name: string) => {
     const colors = [
       'from-emerald-500 to-teal-600',
@@ -47,7 +50,7 @@ export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
       className="surface-card p-4 sm:p-6"
     >
       <div className="flex gap-3 sm:gap-4">
-        {/* Avatar */}
+        {/* Avatar chữ cái, không dùng dữ liệu ngoài nên tránh request ảnh dư thừa. */}
         <div
           className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${getAvatarColor(
             comment.author_name
@@ -56,9 +59,8 @@ export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
           {getInitials(comment.author_name)}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Header */}
+          {/* Header dùng flex-wrap để tên dài không đè lên ngày trên mobile. */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
             <h4 className="font-semibold text-[var(--text)] text-sm sm:text-base">
               {comment.author_name}
@@ -71,7 +73,7 @@ export default function CommentItem({ comment, index = 0 }: CommentItemProps) {
             </div>
           </div>
 
-          {/* Comment text */}
+          {/* Giữ xuống dòng người dùng nhập nhưng vẫn break từ dài để không vỡ layout. */}
           <p className="text-[var(--text-muted)] text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
             {comment.content}
           </p>

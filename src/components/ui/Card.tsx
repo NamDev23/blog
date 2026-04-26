@@ -4,6 +4,12 @@ import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 
+/**
+ * Card primitive cho các khối nội dung lặp lại.
+ *
+ * `hover` và `padded` giúp tái sử dụng trong dashboard/blog mà không phải copy
+ * class surface/padding nhiều lần.
+ */
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hover?: boolean;
   padded?: boolean;

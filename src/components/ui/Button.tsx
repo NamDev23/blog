@@ -5,6 +5,12 @@ import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 import { Slot } from "@radix-ui/react-slot";
 
+/**
+ * Button nền tảng của design system.
+ *
+ * `asChild` cho phép dùng style button cho Link mà không tạo nested button/a sai
+ * semantic. Variant/size được giới hạn bằng union type để UI nhất quán.
+ */
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 export type ButtonShape = "default" | "pill";
@@ -42,6 +48,7 @@ const shapeStyles: Record<ButtonShape, string> = {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", shape = "default", asChild, ...props }, ref) => {
+    // Slot chuyển props/className xuống child, thường là Next Link.
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp

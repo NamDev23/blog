@@ -38,6 +38,12 @@ type StatusFilter = 'all' | 'published' | 'draft';
 type CommentFilter = 'all' | 'pending' | 'approved';
 type MessageFilter = 'all' | ContactMessage['status'];
 type MessageStatus = ContactMessage['status'];
+type PendingConfirm = {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+} | null;
 
 type PaginationState = {
   page: number;
@@ -135,8 +141,11 @@ export default function AdminDashboard() {
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
 
   const loadSummary = useCallback(async () => {
+    // Summary cards lấy tổng từ API pagination, không suy ra từ page hiện tại.
+    // Nhờ vậy số tổng quan vẫn đúng dù mỗi module chỉ tải một lát dữ liệu nhỏ.
     setSummaryLoading(true);
 
     try {
@@ -173,6 +182,8 @@ export default function AdminDashboard() {
   }, []);
 
   const loadPosts = useCallback(async (page = postsPagination.page) => {
+    // Posts được phân trang phía server để admin vẫn nhanh khi số bài tăng.
+    // API public cũ vẫn giữ dạng mảng thường khi không truyền `meta=true`.
     setPostsLoading(true);
     setPostsError('');
 
@@ -206,6 +217,8 @@ export default function AdminDashboard() {
   }, [debouncedQuery, postsPagination.page, status]);
 
   const loadComments = useCallback(async (page = commentsPagination.page) => {
+    // Dữ liệu kiểm duyệt có email riêng tư, nên chỉ tải qua API admin đã xác thực,
+    // không dùng public comments hook.
     setCommentsLoading(true);
     setCommentsError('');
 
@@ -239,6 +252,8 @@ export default function AdminDashboard() {
   }, [commentFilter, commentsPagination.page]);
 
   const loadMessages = useCallback(async (page = messagesPagination.page) => {
+    // Contact messages là inbox vận hành, không phải public content. Giữ page nhỏ
+    // và lọc theo status để việc xử lý tin nhắn dễ dự đoán.
     setMessagesLoading(true);
     setMessagesError('');
 
@@ -349,9 +364,16 @@ export default function AdminDashboard() {
     }
   }
 
-  async function deleteComment(commentId: string) {
-    if (!window.confirm('Delete this comment permanently?')) return;
+  function requestDeleteComment(commentId: string) {
+    setPendingConfirm({
+      title: 'Delete comment',
+      description: 'This permanently removes the comment from the moderation queue and public thread.',
+      confirmLabel: 'Delete comment',
+      onConfirm: () => deleteComment(commentId),
+    });
+  }
 
+  async function deleteComment(commentId: string) {
     setActionId(`comment:${commentId}`);
     setCommentsError('');
 
@@ -395,9 +417,16 @@ export default function AdminDashboard() {
     }
   }
 
-  async function deleteMessage(messageId: string) {
-    if (!window.confirm('Delete this inbox message permanently?')) return;
+  function requestDeleteMessage(messageId: string) {
+    setPendingConfirm({
+      title: 'Delete inbox message',
+      description: 'This permanently removes the contact message from the admin inbox.',
+      confirmLabel: 'Delete message',
+      onConfirm: () => deleteMessage(messageId),
+    });
+  }
 
+  async function deleteMessage(messageId: string) {
     setActionId(`message:${messageId}`);
     setMessagesError('');
 
@@ -489,6 +518,7 @@ export default function AdminDashboard() {
           </main>
         </div>
       </Section>
+      <ConfirmDialog pending={pendingConfirm} busy={Boolean(actionId)} onClose={() => setPendingConfirm(null)} />
     </>
   );
 
@@ -562,13 +592,15 @@ export default function AdminDashboard() {
         {!postsLoading && !postsError && (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] text-left text-sm">
+              <table className="w-full min-w-[1040px] text-left text-sm">
                 <thead className="border-b border-[var(--line)] bg-[rgba(244,241,232,0.035)] text-xs uppercase text-[var(--text-soft)]">
                   <tr>
                     <th className="px-5 py-3 font-semibold">Title</th>
                     <th className="px-5 py-3 font-semibold">Status</th>
                     <th className="px-5 py-3 font-semibold">SEO</th>
+                    <th className="px-5 py-3 font-semibold">Languages</th>
                     <th className="px-5 py-3 font-semibold">Category</th>
+                    <th className="px-5 py-3 font-semibold">Views</th>
                     <th className="px-5 py-3 font-semibold">Date</th>
                     <th className="px-5 py-3 text-right font-semibold">Action</th>
                   </tr>
@@ -577,6 +609,8 @@ export default function AdminDashboard() {
                   {posts.map((post) => {
                     const published = Boolean(post.published_at);
                     const seoReady = Boolean(post.seo_title && post.seo_description);
+                    const translationLocales = new Set((post.post_translations || post.translations || []).map((translation) => translation.locale));
+                    const bilingualReady = translationLocales.has('vi') && translationLocales.has('en');
 
                     return (
                       <tr key={post.id} className="border-b border-[var(--line)] last:border-b-0">
@@ -604,7 +638,13 @@ export default function AdminDashboard() {
                             )}
                           </div>
                         </td>
+                        <td className="px-5 py-4">
+                          <StatusPill tone={bilingualReady ? 'success' : 'warning'}>
+                            {bilingualReady ? 'VI + EN' : 'Missing'}
+                          </StatusPill>
+                        </td>
                         <td className="px-5 py-4 text-[var(--text-muted)]">{post.category}</td>
+                        <td className="px-5 py-4 text-[var(--text-muted)]">{post.view_count.toLocaleString()}</td>
                         <td className="px-5 py-4 text-[var(--text-muted)]">
                           {post.published_at ? formatDate(post.published_at) : 'Unpublished'}
                         </td>
@@ -703,7 +743,7 @@ export default function AdminDashboard() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => deleteComment(comment.id)}
+                          onClick={() => requestDeleteComment(comment.id)}
                           disabled={busy}
                         >
                           <Trash2 size={14} />
@@ -815,10 +855,10 @@ export default function AdminDashboard() {
                         )}
                         <Button
                           type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deleteMessage(message.id)}
-                          disabled={busy}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => requestDeleteMessage(message.id)}
+                        disabled={busy}
                         >
                           <Trash2 size={14} />
                           Delete
@@ -963,7 +1003,49 @@ function EmptyState({ label }: { label: string }) {
   return <div className="p-12 text-center text-sm text-[var(--text-muted)]">{label}</div>;
 }
 
+function ConfirmDialog({
+  pending,
+  busy,
+  onClose,
+}: {
+  pending: Exclude<PendingConfirm, null> | null;
+  busy: boolean;
+  onClose: () => void;
+}) {
+  if (!pending) return null;
+
+  async function confirmAction() {
+    if (!pending) return;
+    await pending.onConfirm();
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+      <div className="surface-card w-full max-w-md p-6 shadow-2xl shadow-black/40">
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10">
+          <Trash2 size={20} className="text-red-300" />
+        </div>
+        <h2 className="text-xl font-semibold text-[var(--text)]">{pending.title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{pending.description}</p>
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
+          <Button type="button" variant="secondary" onClick={confirmAction} disabled={busy}>
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+            {pending.confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function normalizeListResponse<T>(payload: unknown, fallbackLimit: number, fallbackPage: number): ListResponse<T> {
+  // Admin API trả `{ data, pagination }`, trong khi hook public cũ vẫn có thể nhận
+  // mảng thô. Normalizer này giúp dashboard chịu được cả hai shape trong giai đoạn
+  // chuyển đổi API.
   if (isRecord(payload) && Array.isArray(payload.data)) {
     return {
       data: payload.data as T[],
@@ -984,6 +1066,8 @@ function normalizeListResponse<T>(payload: unknown, fallbackLimit: number, fallb
 }
 
 function normalizePagination(value: unknown, fallbackLimit: number, fallbackPage: number): PaginationState {
+  // Pagination metadata là JSON từ network nên luôn coi là không tin cậy. Nếu
+  // route đổi shape hoặc proxy làm mất field, UI fallback về một page an toàn.
   if (!isRecord(value)) return emptyPagination(fallbackLimit);
 
   const page = Number(value.page || fallbackPage);

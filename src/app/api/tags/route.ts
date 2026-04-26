@@ -5,7 +5,10 @@ import { ensureSupabaseConfigured, supabaseFailureResponse } from '@/lib/supabas
 
 /**
  * GET /api/tags
- * Lấy danh sách tất cả tags với số lượng posts
+ * Lấy danh sách tag và số bài đã publish theo từng tag.
+ *
+ * Tag count dùng cho trang Tags và filter blog. Chỉ đếm bài public để số liệu trên
+ * UI không tiết lộ draft hoặc bài hẹn giờ.
  */
 export async function GET() {
   try {
@@ -33,7 +36,7 @@ export async function GET() {
       return supabaseFailureResponse(error);
     }
 
-    // Flatten all tags và đếm số lượng
+    // Flatten toàn bộ mảng tags rồi đếm số lần xuất hiện.
     const tagCounts: Record<string, number> = {};
     
     data?.forEach(post => {
@@ -44,7 +47,7 @@ export async function GET() {
       }
     });
 
-    // Convert to array và sort theo count
+    // Sort giảm dần để chủ đề phổ biến hiển thị trước.
     const tags = Object.entries(tagCounts)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);

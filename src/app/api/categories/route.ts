@@ -5,7 +5,10 @@ import { ensureSupabaseConfigured, supabaseFailureResponse } from '@/lib/supabas
 
 /**
  * GET /api/categories
- * Lấy danh sách tất cả categories từ posts
+ * Lấy danh sách category từ các bài đã publish.
+ *
+ * Category là dữ liệu dẫn xuất từ bảng posts, không phải bảng riêng. Cache dài hơn
+ * bài viết chi tiết vì danh sách category thay đổi ít và không chứa dữ liệu nhạy cảm.
  */
 export async function GET() {
   try {
@@ -33,7 +36,7 @@ export async function GET() {
       return supabaseFailureResponse(error);
     }
 
-    // Lấy unique categories
+    // Dedupe ở server để client nhận mảng category gọn, không phải xử lý thêm.
     const categories = Array.from(
       new Set(data?.map(post => post.category).filter(Boolean))
     );

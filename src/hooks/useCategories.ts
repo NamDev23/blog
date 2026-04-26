@@ -9,8 +9,10 @@ interface UseCategoriesReturn {
 }
 
 /**
- * Custom hook để fetch categories từ API
- * Fallback to mock data nếu API không hoạt động
+ * Hook lấy danh sách category cho filter/navigation client-side.
+ *
+ * Category được dẫn xuất từ bài đã publish, nên fallback cũng lấy từ mock posts
+ * public để hành vi local gần giống API thật.
  */
 export function useCategories(): UseCategoriesReturn {
   const [categories, setCategories] = useState<string[]>([]);
@@ -34,7 +36,7 @@ export function useCategories(): UseCategoriesReturn {
         const data = await response.json();
         setCategories(data);
       } catch (fetchErr) {
-        // Fallback to mock data
+        // Fallback local development khi Supabase/API chưa sẵn sàng.
         console.warn('Using mock data - Supabase not configured or API error:', fetchErr);
         const uniqueCategories = Array.from(
           new Set(mockPosts.map(post => post.category).filter(Boolean))
@@ -60,4 +62,3 @@ export function useCategories(): UseCategoriesReturn {
     refetch: fetchCategories,
   };
 }
-

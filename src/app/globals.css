@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* Token thiết kế toàn site. Dùng CSS variable để component có thể đổi màu nhất quán
+   mà không phải lặp literal hex ở từng nơi. */
 :root {
   color-scheme: dark;
   --background: #0d120f;
@@ -20,6 +22,7 @@
   --shadow: 0 18px 70px rgba(0, 0, 0, 0.28);
 }
 
+/* Reset nền tảng: giữ box model dễ đoán và scroll anchor mượt cho article TOC. */
 * {
   box-sizing: border-box;
 }
@@ -29,6 +32,8 @@ html {
   font-size: 16px;
 }
 
+/* Nền tổng thể dùng hai lớp ánh sáng rất nhẹ để trang kỹ thuật bớt phẳng nhưng
+   vẫn không biến thành palette một màu. */
 body {
   min-height: 100vh;
   margin: 0;
@@ -43,6 +48,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Grid nền cố định tạo chiều sâu cho theme dark; pointer-events none để không
+   ảnh hưởng tương tác. */
 body::before {
   pointer-events: none;
   content: "";
@@ -123,6 +130,7 @@ a {
 }
 
 code {
+  /* Inline code nổi bật nhẹ nhưng không áp đảo paragraph. */
   border: 1px solid var(--line);
   background: rgba(244, 241, 232, 0.08);
   color: var(--accent);
@@ -133,6 +141,7 @@ code {
 }
 
 pre {
+  /* Fallback style cho code block chưa được enhance thành terminal wrapper. */
   overflow-x: auto;
   border: 1px solid var(--line);
   background: #090d0b;
@@ -147,6 +156,7 @@ pre code {
   padding: 0;
 }
 
+/* Container chuẩn dùng lại trong Section/Header/Footer. */
 .container-custom {
   width: 100%;
   max-width: 1180px;
@@ -181,6 +191,7 @@ pre code {
 .line-clamp-1,
 .line-clamp-2,
 .line-clamp-3 {
+  /* Clamp text cho card/list để nội dung động không làm vỡ grid. */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -200,6 +211,7 @@ pre code {
 
 .surface-card,
 .glass {
+  /* Surface chính cho card thật, modal và tool panel. Không dùng cho section lớn. */
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -236,6 +248,7 @@ pre code {
 }
 
 .prose {
+  /* Prose dành cho HTML bài viết render từ CMS/editor. */
   color: var(--text-muted);
 }
 
@@ -284,6 +297,7 @@ pre code {
 }
 
 .prose .heading-anchor {
+  /* Anchor chỉ hiện khi hover/focus để bài đọc sạch nhưng vẫn copy được section link. */
   margin-left: 0.5rem;
   color: var(--amber);
   opacity: 0;
@@ -323,6 +337,7 @@ pre code {
 }
 
 .prose .code-terminal {
+  /* Wrapper do `enhanceCodeBlocks` inject để code block có tiêu đề và nút copy. */
   overflow: hidden;
   margin: 1.5rem 0;
   border: 1px solid rgba(102, 217, 194, 0.24);
@@ -460,6 +475,7 @@ pre code {
 }
 
 .rich-post-editor .ProseMirror {
+  /* Tiptap editor cần chiều cao tối thiểu để admin thấy vùng soạn thảo rõ ràng. */
   min-height: 440px;
 }
 
@@ -496,6 +512,7 @@ pre code {
 }
 
 .rich-post-editor [data-resize-handle] {
+  /* Handle resize ảnh trong editor; style đủ nổi trên nền dark và ảnh sáng. */
   z-index: 2;
   width: 12px;
   height: 12px;
@@ -537,6 +554,7 @@ pre code {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Tôn trọng người dùng giảm chuyển động: tắt animation/transition gần như hoàn toàn. */
   *,
   *::before,
   *::after {

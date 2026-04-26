@@ -10,6 +10,14 @@ import {
 
 export type { Locale } from '@/lib/locales';
 
+/**
+ * Trung tâm trạng thái ngôn ngữ ở phía client.
+ *
+ * Quy ước của website là locale nằm trên URL (`/vi/...`, `/en/...`). Vì vậy
+ * locale đọc từ pathname luôn được ưu tiên hơn `localStorage`; `localStorage`
+ * chỉ giữ lựa chọn gần nhất khi người dùng đổi ngôn ngữ thủ công để các UI
+ * client-only có giá trị mặc định nhất quán trước khi route mới được render.
+ */
 type LanguageContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -105,6 +113,12 @@ export function LanguageProvider({
 }) {
   const pathname = usePathname();
   const pathnameLocale = getLocaleFromPathname(pathname || '');
+
+  /**
+   * Chỉ đọc `localStorage` trong initializer để tránh lệch hydration giữa server
+   * và client. Khi URL có locale, trạng thái này không quyết định ngôn ngữ hiển
+   * thị mà chỉ đóng vai trò preference dự phòng.
+   */
   const [preferredLocale, setPreferredLocale] = useState<Locale>(() => {
     if (pathnameLocale) return pathnameLocale;
     if (typeof window === 'undefined') return initialLocale;
@@ -119,6 +133,8 @@ export function LanguageProvider({
   };
 
   useEffect(() => {
+    // Cập nhật thuộc tính HTML để trình đọc màn hình, trình duyệt và công cụ SEO
+    // hiểu đúng ngôn ngữ hiện tại của nội dung sau khi client navigation xảy ra.
     document.documentElement.lang = locale;
     document.documentElement.dataset.locale = locale;
   }, [locale]);
@@ -145,10 +161,12 @@ export function useLanguage() {
 }
 
 export function getCategoryLabel(category: string, locale: Locale) {
+  // Category trong database giữ dạng canonical tiếng Anh; label được dịch ở UI.
   return categoryLabels[category]?.[locale] || category;
 }
 
 export function formatLocalizedDate(date: string | Date, locale: Locale) {
+  // Dùng Intl của trình duyệt/Node để tránh tự format ngày tháng theo chuỗi cứng.
   return new Date(date).toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', {
     year: 'numeric',
     month: 'long',

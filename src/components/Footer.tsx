@@ -1,16 +1,25 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Github, Linkedin, Twitter, Mail, ArrowRight, Terminal } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { exploreLinks } from '@/lib/navigation';
 import { siteConfig } from '@/lib/site';
 import { navigationLabels, useLanguage } from '@/lib/i18n';
-import { localizedPath } from '@/lib/locales';
+import { localizedPath, stripLocaleFromPathname } from '@/lib/locales';
 
+/**
+ * Footer public.
+ *
+ * Dùng chung `exploreLinks` với Header để thứ tự navigation nhất quán. Admin path
+ * không render footer vì dashboard có layout riêng và không cần navigation public.
+ */
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { locale } = useLanguage();
+  const pathname = usePathname();
+  const activePathname = stripLocaleFromPathname(pathname || '/');
   const navLabels = navigationLabels[locale];
   const copy = locale === 'vi'
     ? {
@@ -35,7 +44,12 @@ export default function Footer() {
     label: navLabels[link.key],
   }));
 
+  if (activePathname.startsWith('/admin')) {
+    return null;
+  }
+
   const socialLinks = [
+    // TODO: thay placeholder `#` bằng profile thật trước khi production launch.
     { icon: Github, href: '#', label: 'GitHub' },
     { icon: Linkedin, href: '#', label: 'LinkedIn' },
     { icon: Twitter, href: '#', label: 'Twitter' },
@@ -140,7 +154,7 @@ export default function Footer() {
           </motion.div>
         </motion.div>
 
-        {/* Divider */}
+        {/* Dải cuối giữ thông tin build/brand, không chứa link để tránh làm footer quá nặng. */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

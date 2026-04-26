@@ -4,6 +4,12 @@ import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 
+/**
+ * Badge dùng cho category/tag/status nhỏ.
+ *
+ * Component chỉ render `span` để tránh semantic sai; nếu cần tương tác thì bọc bằng
+ * button/link ở nơi sử dụng.
+ */
 export type BadgeVariant = "default" | "primary" | "outline";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {

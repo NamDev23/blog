@@ -25,6 +25,13 @@ import { siteConfig } from '@/lib/site';
 import { commonCopy, useLanguage } from '@/lib/i18n';
 import { localizedPath } from '@/lib/locales';
 
+/**
+ * Trang chủ public.
+ *
+ * Trang này vừa là landing page vừa là bản tóm tắt năng lực: hero, tín hiệu phỏng
+ * vấn, đường dẫn bằng chứng, bài viết nổi bật và form newsletter. Nội dung ngắn
+ * được localize tại component; dữ liệu bài viết lấy qua API để phản ánh CMS.
+ */
 export default function Home() {
   const { locale } = useLanguage();
   const common = commonCopy[locale];
@@ -176,14 +183,14 @@ export default function Home() {
         ],
       };
 
-  // Fetch featured posts (use 6 for more content on homepage)
+  // Lấy 6 bài mới nhất để đủ dữ liệu cho cụm featured và CTA xem tất cả.
   const { posts: featuredPosts, loading, error } = usePosts({ limit: 6 });
   return (
     <>
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Interview Snapshot */}
+      {/* Interview Snapshot: nêu nhanh định vị năng lực cho recruiter/interviewer. */}
       <Section className="border-b border-[var(--line)] bg-[rgba(244,241,232,0.025)]">
         <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <motion.div
@@ -234,7 +241,7 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* Proof Links */}
+      {/* Proof Links: đưa người đọc tới các trang có bằng chứng cụ thể hơn. */}
       <Section withDividerBottom>
         <div className="mb-10 max-w-3xl">
           <div className="micro-label mb-3 flex items-center gap-2">
